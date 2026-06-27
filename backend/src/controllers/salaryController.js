@@ -1,13 +1,41 @@
-const { SalaryStructure, SalaryComponent } = require('../models');
+const { SalaryStructure, SalaryComponent, Employee, sequelize } = require('../models');
+const { Op } = require('sequelize');
 
 exports.listStructures = async (req, res) => {
   try {
     const company_id = req.user.company_id;
+
     const structures = await SalaryStructure.findAll({
       where: { company_id },
       order: [['name', 'ASC']]
     });
-    res.json(structures);
+
+    const ids = structures.map((s) => s.id);
+    if (ids.length === 0) return res.json([]);
+
+    const [empCounts, compCounts] = await Promise.all([
+      Employee.findAll({
+        where: { company_id, salary_structure_id: { [Op.in]: ids } },
+        attributes: ['salary_structure_id', [sequelize.fn('COUNT', sequelize.col('id')), 'cnt']],
+        group: ['salary_structure_id'],
+        raw: true,
+      }),
+      SalaryComponent.findAll({
+        where: { structure_id: { [Op.in]: ids } },
+        attributes: ['structure_id', [sequelize.fn('COUNT', sequelize.col('id')), 'cnt']],
+        group: ['structure_id'],
+        raw: true,
+      }),
+    ]);
+
+    const empMap = Object.fromEntries(empCounts.map((r) => [r.salary_structure_id, parseInt(r.cnt, 10)]));
+    const compMap = Object.fromEntries(compCounts.map((r) => [r.structure_id, parseInt(r.cnt, 10)]));
+
+    res.json(structures.map((s) => ({
+      ...s.toJSON(),
+      employee_count: empMap[s.id] || 0,
+      components_count: compMap[s.id] || 0,
+    })));
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
