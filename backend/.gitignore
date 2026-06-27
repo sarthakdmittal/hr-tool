@@ -1,0 +1,7 @@
+node_modules/
+.env
+hr_tool.db
+*.db
+dist/
+logs/
+*.log
