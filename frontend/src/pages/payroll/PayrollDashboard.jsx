@@ -204,7 +204,7 @@ export default function PayrollDashboard() {
     onSuccess: () => {
       toast.success('Payroll processed successfully');
       setConfirmModalOpen(false);
-      queryClient.invalidateQueries(['payroll', selectedMonth, selectedYear]);
+      queryClient.invalidateQueries({ queryKey: ['payroll', selectedMonth, selectedYear] });
     },
     onError: (err) => {
       toast.error(err.response?.data?.message || 'Failed to run payroll');

@@ -6,6 +6,74 @@ const { Op } = require('sequelize');
 const { calculatePayrollForEmployee } = require('../services/payrollService');
 const { generateSalarySlip } = require('../services/pdfService');
 
+const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+function formatSlipRow(item) {
+  const emp = item.Employee || {};
+  const dept = emp.Department || {};
+  const desig = emp.Designation || {};
+  const cj = item.components_json || {};
+  const earnings = Object.values(cj.earnings || {}).filter((e) => e.amount > 0);
+  const deductions = Object.values(cj.deductions || {}).filter((d) => d.amount > 0);
+  return {
+    id: item.id,
+    run_id: item.payroll_run_id,
+    employee_name: `${emp.first_name || ''} ${emp.last_name || ''}`.trim(),
+    emp_id: emp.emp_id,
+    department: dept.name || null,
+    designation: desig.name || null,
+    working_days: item.working_days,
+    paid_days: item.paid_days,
+    lop_days: item.lop_days,
+    gross: parseFloat(item.gross_salary) || 0,
+    basic: parseFloat(item.basic_salary) || 0,
+    hra: parseFloat(item.hra) || 0,
+    epf_employee: parseFloat(item.epf_employee) || 0,
+    esic_employee: parseFloat(item.esic_employee) || 0,
+    tds: parseFloat(item.tds) || 0,
+    deductions: parseFloat(item.total_deductions) || 0,
+    net_pay: parseFloat(item.net_salary) || 0,
+    epf_employer: parseFloat(item.epf_employer) || 0,
+    esic_employer: parseFloat(item.esic_employer) || 0,
+    other_earnings: earnings.filter((e) => !['BASIC', 'HRA'].includes(e.code)).reduce((s, e) => s + e.amount, 0),
+    earnings,
+    deduction_items: deductions,
+  };
+}
+
+exports.listSlips = async (req, res) => {
+  try {
+    const company_id = req.user.company_id;
+    const { month, year } = req.query;
+    if (!month || !year) return res.json({ run_info: null, slips: [] });
+
+    const run = await PayrollRun.findOne({
+      where: { company_id, month: parseInt(month), year: parseInt(year) }
+    });
+    if (!run) return res.json({ run_info: null, slips: [] });
+
+    const items = await PayrollItem.findAll({
+      where: { payroll_run_id: run.id },
+      include: [{
+        model: Employee,
+        attributes: ['id', 'emp_id', 'first_name', 'last_name'],
+        include: [
+          { model: Department, attributes: ['id', 'name'] },
+          { model: Designation, attributes: ['id', 'name'] }
+        ]
+      }],
+      order: [[Employee, 'first_name', 'ASC']]
+    });
+
+    res.json({
+      run_info: { id: run.id, month: run.month, year: run.year, status: run.status },
+      slips: items.map(formatSlipRow),
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
 exports.runPayroll = async (req, res) => {
   try {
     const company_id = req.user.company_id;
@@ -240,7 +308,20 @@ exports.getSlip = async (req, res) => {
 
     if (!item) return res.status(404).json({ error: 'Payslip not found' });
 
-    res.json(item);
+    const run = item.PayrollRun;
+    const company = await Company.findByPk(company_id, { attributes: ['id', 'name'] });
+    const row = formatSlipRow(item);
+
+    res.json({
+      ...row,
+      company_name: company?.name,
+      month: run.month,
+      year: run.year,
+      month_label: `${MONTHS[run.month - 1]} ${run.year}`,
+      status: run.status,
+      earnings: row.earnings,
+      deductions: row.deduction_items,
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

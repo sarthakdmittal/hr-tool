@@ -3,6 +3,7 @@ const router = express.Router();
 const auth = require('../middleware/auth');
 const payrollController = require('../controllers/payrollController');
 
+router.get('/', auth, payrollController.listSlips);
 router.post('/run', auth, payrollController.runPayroll);
 router.get('/runs', auth, payrollController.listRuns);
 router.get('/runs/:run_id', auth, payrollController.getRun);
