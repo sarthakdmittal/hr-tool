@@ -155,6 +155,8 @@ export default function EmployeeForm() {
         ...data,
         dob: data.dob || null,
         joining_date: data.joining_date || null,
+        gender: data.gender || null,
+        employment_type: data.employment_type || null,
         ctc: data.ctc !== '' ? Number(data.ctc) : null,
         salary_structure_id: data.salary_structure_id !== '' ? Number(data.salary_structure_id) : null,
         manager_id: data.manager_id !== '' ? Number(data.manager_id) : null,

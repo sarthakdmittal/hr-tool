@@ -34,10 +34,13 @@ exports.listEmployees = async (req, res) => {
   }
 };
 
-const sanitizeDates = (obj) => {
+const sanitizeFields = (obj) => {
   const out = { ...obj };
   ['dob', 'joining_date', 'termination_date'].forEach((f) => {
     if (out[f] === '' || out[f] === 'Invalid date') out[f] = null;
+  });
+  ['gender', 'employment_type'].forEach((f) => {
+    if (out[f] === '') out[f] = null;
   });
   return out;
 };
@@ -45,7 +48,7 @@ const sanitizeDates = (obj) => {
 exports.createEmployee = async (req, res) => {
   try {
     const company_id = req.user.company_id;
-    const data = sanitizeDates({ ...req.body, company_id });
+    const data = sanitizeFields({ ...req.body, company_id });
 
     // Validate required fields
     if (!data.emp_id || !data.first_name || !data.last_name || !data.email || !data.joining_date) {
@@ -101,7 +104,7 @@ exports.updateEmployee = async (req, res) => {
 
     // Prevent changing company_id
     const { company_id: _, ...rawUpdate } = req.body;
-    const updateData = sanitizeDates(rawUpdate);
+    const updateData = sanitizeFields(rawUpdate);
     await employee.update(updateData);
 
     res.json({ message: 'Employee updated successfully', employee });
