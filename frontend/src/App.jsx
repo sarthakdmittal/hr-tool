@@ -1,6 +1,7 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { isAuthenticated } from './store/authStore';
 import Layout from './components/Layout';
+import ErrorBoundary from './components/ErrorBoundary';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import EmployeeList from './pages/employees/EmployeeList';
@@ -72,9 +73,9 @@ export default function App() {
         <Route path="/payroll/run/:runId" element={<PayrollDetails />} />
 
         {/* Reports */}
-        <Route path="/reports/pf" element={<PFReport />} />
-        <Route path="/reports/tds" element={<TDSReport />} />
-        <Route path="/reports/esic" element={<ESICReport />} />
+        <Route path="/reports/pf" element={<ErrorBoundary><PFReport /></ErrorBoundary>} />
+        <Route path="/reports/tds" element={<ErrorBoundary><TDSReport /></ErrorBoundary>} />
+        <Route path="/reports/esic" element={<ErrorBoundary><ESICReport /></ErrorBoundary>} />
 
         {/* Settings */}
         <Route path="/settings" element={<CompanySettings />} />
