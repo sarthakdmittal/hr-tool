@@ -1,59 +1,6 @@
 const { SalaryStructure, SalaryComponent, Employee, sequelize } = require('../models');
 const { Op } = require('sequelize');
 
-// Map frontend shorthand → DB calculation_type values
-const TYPE_MAP = {
-  pct_ctc: 'percentage_of_ctc',
-  pct_basic: 'percentage_of_basic',
-  pct_gross: 'percentage_of_gross',
-  fixed: 'fixed',
-  special_balance: 'special_balance',
-};
-const REVERSE_TYPE_MAP = Object.fromEntries(Object.entries(TYPE_MAP).map(([k, v]) => [v, k]));
-
-async function saveComponents(structure_id, earnings = [], deductions = []) {
-  await SalaryComponent.destroy({ where: { structure_id } });
-  const rows = [];
-  earnings.forEach((e, i) => rows.push({
-    structure_id,
-    name: e.name,
-    code: e.code || e.name.toUpperCase().replace(/\s+/g, '_'),
-    type: 'earning',
-    calculation_type: TYPE_MAP[e.type] || e.type || 'fixed',
-    value: parseFloat(e.value) || 0,
-    taxable: e.taxable !== false,
-    sequence_order: i + 1,
-    is_active: true,
-  }));
-  deductions.forEach((d, i) => rows.push({
-    structure_id,
-    name: d.name,
-    code: d.code || d.name.toUpperCase().replace(/\s+/g, '_'),
-    type: 'deduction',
-    calculation_type: TYPE_MAP[d.type] || d.type || 'fixed',
-    value: parseFloat(d.value) || 0,
-    taxable: d.taxable !== false,
-    sequence_order: i + 1,
-    is_active: true,
-  }));
-  if (rows.length) await SalaryComponent.bulkCreate(rows);
-}
-
-function formatStructureResponse(structure) {
-  const result = structure.toJSON ? structure.toJSON() : { ...structure };
-  const components = result.components || [];
-  result.earnings = components
-    .filter((c) => c.type === 'earning')
-    .sort((a, b) => a.sequence_order - b.sequence_order)
-    .map((c) => ({ name: c.name, code: c.code, type: REVERSE_TYPE_MAP[c.calculation_type] || c.calculation_type, value: parseFloat(c.value), taxable: c.taxable }));
-  result.deductions = components
-    .filter((c) => c.type === 'deduction')
-    .sort((a, b) => a.sequence_order - b.sequence_order)
-    .map((c) => ({ name: c.name, code: c.code, type: REVERSE_TYPE_MAP[c.calculation_type] || c.calculation_type, value: parseFloat(c.value), taxable: c.taxable }));
-  delete result.components;
-  return result;
-}
-
 exports.listStructures = async (req, res) => {
   try {
     const company_id = req.user.company_id;
@@ -97,12 +44,11 @@ exports.listStructures = async (req, res) => {
 exports.createStructure = async (req, res) => {
   try {
     const company_id = req.user.company_id;
-    const { name, description, earnings, deductions } = req.body;
+    const { name, description } = req.body;
 
     if (!name) return res.status(400).json({ error: 'Name is required' });
 
     const structure = await SalaryStructure.create({ company_id, name, description });
-    await saveComponents(structure.id, earnings, deductions);
     res.status(201).json(structure);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -116,12 +62,12 @@ exports.getStructure = async (req, res) => {
 
     const structure = await SalaryStructure.findOne({
       where: { id, company_id },
-      include: [{ model: SalaryComponent, as: 'components', required: false, order: [['sequence_order', 'ASC']] }]
+      include: [{ model: SalaryComponent, as: 'components', where: { is_active: true }, required: false }]
     });
 
     if (!structure) return res.status(404).json({ error: 'Salary structure not found' });
 
-    res.json(formatStructureResponse(structure));
+    res.json(structure);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -135,11 +81,8 @@ exports.updateStructure = async (req, res) => {
     const structure = await SalaryStructure.findOne({ where: { id, company_id } });
     if (!structure) return res.status(404).json({ error: 'Salary structure not found' });
 
-    const { name, description, is_active, earnings, deductions } = req.body;
+    const { name, description, is_active } = req.body;
     await structure.update({ name, description, is_active });
-    if (earnings || deductions) {
-      await saveComponents(structure.id, earnings || [], deductions || []);
-    }
 
     res.json({ message: 'Structure updated', structure });
   } catch (err) {

@@ -21,12 +21,12 @@ const SalaryComponent = sequelize.define('SalaryComponent', {
     comment: 'Short code like BASIC, HRA, TA, etc.'
   },
   type: {
-    type: DataTypes.STRING(50),
+    type: DataTypes.ENUM('earning', 'deduction', 'employer_contribution'),
     allowNull: false,
     defaultValue: 'earning'
   },
   calculation_type: {
-    type: DataTypes.STRING(50),
+    type: DataTypes.ENUM('fixed', 'percentage_of_ctc', 'percentage_of_basic', 'percentage_of_gross'),
     allowNull: false,
     defaultValue: 'fixed'
   },
