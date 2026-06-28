@@ -70,7 +70,19 @@ const Company = sequelize.define('Company', {
   incorporation_date: {
     type: DataTypes.DATEONLY,
     allowNull: true
-  }
+  },
+  industry: { type: DataTypes.STRING(100), allowNull: true },
+  founded_year: { type: DataTypes.INTEGER, allowNull: true },
+  gstin: { type: DataTypes.STRING(20), allowNull: true },
+  lwf_number: { type: DataTypes.STRING(50), allowNull: true },
+  payroll_day: { type: DataTypes.INTEGER, allowNull: true },
+  working_days_per_month: { type: DataTypes.INTEGER, allowNull: true },
+  epf_employer_rate: { type: DataTypes.DECIMAL(5,2), allowNull: true },
+  epf_employee_rate: { type: DataTypes.DECIMAL(5,2), allowNull: true },
+  esic_employer_rate: { type: DataTypes.DECIMAL(5,2), allowNull: true },
+  esic_employee_rate: { type: DataTypes.DECIMAL(5,2), allowNull: true },
+  epf_ceiling: { type: DataTypes.INTEGER, allowNull: true },
+  esic_ceiling: { type: DataTypes.INTEGER, allowNull: true }
 }, {
   tableName: 'companies'
 });

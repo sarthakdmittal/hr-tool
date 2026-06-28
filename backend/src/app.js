@@ -29,6 +29,7 @@ app.use(morgan('dev'));
 // Routes
 app.use('/api/auth',             require('./routes/auth'));
 app.use('/api/company',          require('./routes/company'));
+app.use('/api/settings',         require('./routes/company')); // alias
 app.use('/api/departments',      require('./routes/departments'));
 app.use('/api/designations',     require('./routes/designations'));
 app.use('/api/employees',        require('./routes/employees'));
@@ -56,6 +57,18 @@ async function runMigrations() {
     `ALTER TABLE salary_structures ADD COLUMN IF NOT EXISTS apply_epf BOOLEAN DEFAULT true`,
     `ALTER TABLE salary_structures ADD COLUMN IF NOT EXISTS apply_esic BOOLEAN DEFAULT true`,
     `ALTER TABLE salary_structures ADD COLUMN IF NOT EXISTS apply_pt BOOLEAN DEFAULT true`,
+    `ALTER TABLE companies ADD COLUMN IF NOT EXISTS industry VARCHAR(100)`,
+    `ALTER TABLE companies ADD COLUMN IF NOT EXISTS founded_year INTEGER`,
+    `ALTER TABLE companies ADD COLUMN IF NOT EXISTS gstin VARCHAR(20)`,
+    `ALTER TABLE companies ADD COLUMN IF NOT EXISTS lwf_number VARCHAR(50)`,
+    `ALTER TABLE companies ADD COLUMN IF NOT EXISTS payroll_day INTEGER`,
+    `ALTER TABLE companies ADD COLUMN IF NOT EXISTS working_days_per_month INTEGER`,
+    `ALTER TABLE companies ADD COLUMN IF NOT EXISTS epf_employer_rate DECIMAL(5,2)`,
+    `ALTER TABLE companies ADD COLUMN IF NOT EXISTS epf_employee_rate DECIMAL(5,2)`,
+    `ALTER TABLE companies ADD COLUMN IF NOT EXISTS esic_employer_rate DECIMAL(5,2)`,
+    `ALTER TABLE companies ADD COLUMN IF NOT EXISTS esic_employee_rate DECIMAL(5,2)`,
+    `ALTER TABLE companies ADD COLUMN IF NOT EXISTS epf_ceiling INTEGER`,
+    `ALTER TABLE companies ADD COLUMN IF NOT EXISTS esic_ceiling INTEGER`,
   ];
   for (const sql of stmts) {
     try { await sequelize.query(sql); } catch (_) { /* already applied */ }
