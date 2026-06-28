@@ -121,11 +121,14 @@ exports.runPayroll = async (req, res) => {
 
     for (const employee of employees) {
       try {
-        // Get salary components
-        const components = await SalaryComponent.findAll({
-          where: { structure_id: employee.salary_structure_id, is_active: true },
-          order: [['sequence_order', 'ASC']]
-        });
+        // Get salary components and structure flags
+        const [components, salaryStructure] = await Promise.all([
+          SalaryComponent.findAll({
+            where: { structure_id: employee.salary_structure_id, is_active: true },
+            order: [['sequence_order', 'ASC']]
+          }),
+          SalaryStructure.findByPk(employee.salary_structure_id),
+        ]);
 
         // Get attendance records
         const attendanceRecords = await Attendance.findAll({
@@ -142,7 +145,7 @@ exports.runPayroll = async (req, res) => {
 
         // Calculate payroll
         const calculation = calculatePayrollForEmployee(
-          employee, month, year, attendanceRecords, taxDeclaration, components
+          employee, month, year, attendanceRecords, taxDeclaration, components, salaryStructure
         );
 
         // Save or update PayrollItem

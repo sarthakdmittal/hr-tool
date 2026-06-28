@@ -51,11 +51,15 @@ const PORT = process.env.PORT || 5000;
 
 async function runMigrations() {
   if (!process.env.DATABASE_URL) return;
-  try {
-    await sequelize.query(
-      `ALTER TABLE salary_components ALTER COLUMN calculation_type TYPE VARCHAR(50) USING calculation_type::text`
-    );
-  } catch (_) { /* already varchar, or table not yet created */ }
+  const stmts = [
+    `ALTER TABLE salary_components ALTER COLUMN calculation_type TYPE VARCHAR(50) USING calculation_type::text`,
+    `ALTER TABLE salary_structures ADD COLUMN IF NOT EXISTS apply_epf BOOLEAN DEFAULT true`,
+    `ALTER TABLE salary_structures ADD COLUMN IF NOT EXISTS apply_esic BOOLEAN DEFAULT true`,
+    `ALTER TABLE salary_structures ADD COLUMN IF NOT EXISTS apply_pt BOOLEAN DEFAULT true`,
+  ];
+  for (const sql of stmts) {
+    try { await sequelize.query(sql); } catch (_) { /* already applied */ }
+  }
 }
 
 sequelize.authenticate()

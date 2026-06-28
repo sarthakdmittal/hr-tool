@@ -159,6 +159,9 @@ export default function SalaryStructureForm() {
     defaultValues: {
       name: '',
       description: '',
+      apply_epf: true,
+      apply_esic: true,
+      apply_pt: true,
       earnings: DEFAULT_EARNINGS,
       deductions: DEFAULT_DEDUCTIONS,
     },
@@ -187,6 +190,9 @@ export default function SalaryStructureForm() {
     reset({
       name: structureData.name || '',
       description: structureData.description || '',
+      apply_epf: structureData.apply_epf !== false,
+      apply_esic: structureData.apply_esic !== false,
+      apply_pt: structureData.apply_pt !== false,
       earnings: structureData.earnings || DEFAULT_EARNINGS,
       deductions: structureData.deductions || DEFAULT_DEDUCTIONS,
     });
@@ -261,6 +267,24 @@ export default function SalaryStructureForm() {
                 {...register('description')}
               />
             </div>
+          </div>
+        </div>
+
+        {/* Statutory Deductions */}
+        <div className="card space-y-3">
+          <h2 className="text-base font-semibold text-gray-800">Statutory Deductions</h2>
+          <p className="text-xs text-gray-500">Uncheck to disable for this salary structure (e.g., for consultants or exempt employees).</p>
+          <div className="flex flex-wrap gap-6">
+            {[
+              { key: 'apply_epf', label: 'EPF (12% of Basic, capped ₹15k)' },
+              { key: 'apply_esic', label: 'ESIC (0.75% if gross ≤ ₹21,000)' },
+              { key: 'apply_pt', label: 'Professional Tax' },
+            ].map(({ key, label }) => (
+              <label key={key} className="flex items-center gap-2 cursor-pointer select-none">
+                <input type="checkbox" className="h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500" {...register(key)} />
+                <span className="text-sm text-gray-700">{label}</span>
+              </label>
+            ))}
           </div>
         </div>
 

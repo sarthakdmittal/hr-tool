@@ -42,7 +42,7 @@ function getWorkingDaysInMonth(month, year) {
  * @param {Array} components - Array of SalaryComponent objects
  * @returns {Object} Payroll breakdown
  */
-function calculatePayrollForEmployee(employee, month, year, attendanceRecords, taxDeclaration, components) {
+function calculatePayrollForEmployee(employee, month, year, attendanceRecords, taxDeclaration, components, salaryStructure) {
   const ctc = parseFloat(employee.ctc) || 0;
   const workingDays = getWorkingDaysInMonth(month, year);
 
@@ -145,18 +145,22 @@ function calculatePayrollForEmployee(employee, month, year, attendanceRecords, t
 
   // Step 6: Statutory deductions
   // EPF uses prorated basic (actual paid basic for the month), capped at ₹15,000
+  const applyEPF  = salaryStructure?.apply_epf  !== false;
+  const applyESIC = salaryStructure?.apply_esic !== false;
+  const applyPT   = salaryStructure?.apply_pt   !== false;
+
   const basicForEPF = earningsMap['BASIC']?.amount ?? Object.values(earningsMap)[0]?.amount ?? 0;
-  const epfBasic = Math.min(basicForEPF, 15000);
+  const epfBasic = applyEPF ? Math.min(basicForEPF, 15000) : 0;
   const employeeEPF = Math.round(epfBasic * 0.12);
   const employerEPF = Math.round(epfBasic * 0.0367);
   const employerEPS = Math.round(epfBasic * 0.0833);
 
   // ESIC: applicable if gross <= 21000
-  const employeeESIC = grossSalary <= 21000 ? Math.round(grossSalary * 0.0075) : 0;
-  const employerESIC = grossSalary <= 21000 ? Math.round(grossSalary * 0.0325) : 0;
+  const employeeESIC = applyESIC && grossSalary <= 21000 ? Math.round(grossSalary * 0.0075) : 0;
+  const employerESIC = applyESIC && grossSalary <= 21000 ? Math.round(grossSalary * 0.0325) : 0;
 
   // Professional Tax
-  const professionalTax = calculatePT(grossSalary);
+  const professionalTax = applyPT ? calculatePT(grossSalary) : 0;
 
   // TDS
   const monthlyTDS = calculateMonthlyTDS(employee, grossSalary * 12, taxDeclaration);
