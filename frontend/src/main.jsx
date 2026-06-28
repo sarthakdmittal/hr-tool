@@ -7,12 +7,23 @@ import App from './App';
 import ErrorBoundary from './components/ErrorBoundary';
 import './index.css';
 
+// Catch async/effect errors that React error boundaries cannot intercept.
+// These would otherwise silently blank the page in production.
+window.addEventListener('unhandledrejection', (event) => {
+  console.error('[unhandledrejection]', event.reason);
+});
+
+window.addEventListener('error', (event) => {
+  console.error('[global error]', event.message, event.error);
+});
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       retry: 1,
       staleTime: 30_000,
       refetchOnWindowFocus: false,
+      throwOnError: false,
     },
   },
 });
