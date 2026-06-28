@@ -17,15 +17,16 @@ api.interceptors.request.use(config => {
 api.interceptors.response.use(
   r => r,
   err => {
-    // Only clear session for genuine auth failures (token invalid/expired/missing)
-    // Do NOT clear on 503 (server/DB unavailable) — that would wrongly log the user out
+    // Only clear session for genuine auth failures (token invalid/expired/missing).
+    // Use a custom event so React Router handles the navigation (no full-page reload,
+    // no blank flash). Do NOT redirect on 503 — that would wrongly log the user out.
     if (err.response?.status === 401) {
       const msg = err.response?.data?.error || '';
       const isAuthError = msg.includes('token') || msg.includes('Token') || msg.includes('No token');
       if (isAuthError) {
         localStorage.removeItem('token');
         localStorage.removeItem('user');
-        window.location.href = '/login';
+        window.dispatchEvent(new CustomEvent('auth:logout'));
       }
     }
     return Promise.reject(err);

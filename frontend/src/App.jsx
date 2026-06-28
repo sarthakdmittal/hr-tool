@@ -1,4 +1,5 @@
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import { useEffect } from 'react';
 import { isAuthenticated } from './store/authStore';
 import Layout from './components/Layout';
 import ErrorBoundary from './components/ErrorBoundary';
@@ -29,6 +30,14 @@ function PublicRoute({ children }) {
 }
 
 export default function App() {
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const handler = () => navigate('/login', { replace: true });
+    window.addEventListener('auth:logout', handler);
+    return () => window.removeEventListener('auth:logout', handler);
+  }, [navigate]);
+
   return (
     <Routes>
       <Route
