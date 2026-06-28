@@ -52,15 +52,16 @@ export default function TDSReport() {
   const monthOptions = getMonthOptions();
   const yearOptions = getYearOptions();
 
-  const { data = [], isLoading } = useQuery({
+  const { data: reportData, isLoading } = useQuery({
     queryKey: ['report-tds', selectedMonth, selectedYear],
     queryFn: () =>
       api.get('/reports/tds', { params: { month: selectedMonth, year: selectedYear } }).then((r) => r.data),
   });
 
-  const totalGross = data.reduce((s, r) => s + (r.gross || 0), 0);
+  const data = reportData?.data || [];
+  const totalGross = data.reduce((s, r) => s + (r.gross_salary || r.gross || 0), 0);
   const totalTaxable = data.reduce((s, r) => s + (r.taxable_income || 0), 0);
-  const totalTds = data.reduce((s, r) => s + (r.tds || 0), 0);
+  const totalTds = reportData?.total_tds ?? data.reduce((s, r) => s + (r.tds || 0), 0);
 
   const columns = [
     {

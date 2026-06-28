@@ -52,16 +52,19 @@ export default function PFReport() {
   const monthOptions = getMonthOptions();
   const yearOptions = getYearOptions();
 
-  const { data = [], isLoading } = useQuery({
+  const { data: reportData, isLoading } = useQuery({
     queryKey: ['report-pf', selectedMonth, selectedYear],
     queryFn: () =>
       api.get('/reports/pf', { params: { month: selectedMonth, year: selectedYear } }).then((r) => r.data),
   });
 
-  const totalEpfEmp = data.reduce((s, r) => s + (r.epf_employee || 0), 0);
-  const totalEpfEr = data.reduce((s, r) => s + (r.epf_employer || 0), 0);
-  const totalEps = data.reduce((s, r) => s + (r.eps || 0), 0);
-  const totalPf = data.reduce((s, r) => s + (r.total_pf || 0), 0);
+  const data = reportData?.data || [];
+  const summary = reportData?.summary || {};
+
+  const totalEpfEmp = summary.total_employee_pf ?? data.reduce((s, r) => s + (r.epf_employee || 0), 0);
+  const totalEpfEr = summary.total_employer_pf ?? data.reduce((s, r) => s + (r.epf_employer || 0), 0);
+  const totalEps = summary.total_eps ?? data.reduce((s, r) => s + (r.eps_employer || r.eps || 0), 0);
+  const totalPf = summary.total_challan ?? data.reduce((s, r) => s + (r.total_pf || 0), 0);
 
   const columns = [
     {

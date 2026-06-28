@@ -27,7 +27,7 @@ function downloadESICCSV(data, month, year) {
     row.name || row.employee_name,
     row.emp_id || '',
     row.esic_number || '',
-    row.gross || 0,
+    row.gross_salary || 0,
     row.esic_employee || 0,
     row.esic_employer || 0,
     row.total_esic || 0,
@@ -51,16 +51,19 @@ export default function ESICReport() {
   const monthOptions = getMonthOptions();
   const yearOptions = getYearOptions();
 
-  const { data = [], isLoading } = useQuery({
+  const { data: reportData, isLoading } = useQuery({
     queryKey: ['report-esic', selectedMonth, selectedYear],
     queryFn: () =>
       api.get('/reports/esic', { params: { month: selectedMonth, year: selectedYear } }).then((r) => r.data),
   });
 
-  const totalGross = data.reduce((s, r) => s + (r.gross || 0), 0);
-  const totalEsicEmp = data.reduce((s, r) => s + (r.esic_employee || 0), 0);
-  const totalEsicEr = data.reduce((s, r) => s + (r.esic_employer || 0), 0);
-  const totalEsic = data.reduce((s, r) => s + (r.total_esic || 0), 0);
+  const data = reportData?.data || [];
+  const summary = reportData?.summary || {};
+
+  const totalGross = summary.total_gross ?? data.reduce((s, r) => s + (r.gross_salary || 0), 0);
+  const totalEsicEmp = summary.total_employee_esic ?? data.reduce((s, r) => s + (r.esic_employee || 0), 0);
+  const totalEsicEr = summary.total_employer_esic ?? data.reduce((s, r) => s + (r.esic_employer || 0), 0);
+  const totalEsic = summary.total_challan ?? data.reduce((s, r) => s + (r.total_esic || 0), 0);
 
   const columns = [
     {
@@ -80,7 +83,7 @@ export default function ESICReport() {
     },
     {
       header: 'Gross Wages',
-      accessor: 'gross',
+      accessor: 'gross_salary',
       render: (val) => formatCurrency(val),
     },
     {

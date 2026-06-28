@@ -113,13 +113,11 @@ exports.getESICReport = async (req, res) => {
     if (!run) return res.status(404).json({ error: 'Payroll not processed for this month' });
 
     const items = await PayrollItem.findAll({
-      where: {
-        payroll_run_id: run.id,
-        esic_employee: { [Op.gt]: 0 }
-      },
+      where: { payroll_run_id: run.id },
       include: [{
         model: Employee,
-        attributes: ['id', 'emp_id', 'first_name', 'last_name', 'esic_number']
+        attributes: ['id', 'emp_id', 'first_name', 'last_name', 'esic_number'],
+        include: [{ model: Department, attributes: ['id', 'name'] }]
       }]
     });
 
@@ -127,19 +125,22 @@ exports.getESICReport = async (req, res) => {
       employee_id: item.employee_id,
       emp_id: item.Employee.emp_id,
       name: `${item.Employee.first_name} ${item.Employee.last_name}`,
+      department: item.Employee.Department?.name || '',
       esic_number: item.Employee.esic_number,
       gross_salary: parseFloat(item.gross_salary),
       esic_employee: parseFloat(item.esic_employee),
       esic_employer: parseFloat(item.esic_employer),
-      total_esic: parseFloat(item.esic_employee) + parseFloat(item.esic_employer)
+      total_esic: parseFloat(item.esic_employee) + parseFloat(item.esic_employer),
+      esic_applicable: parseFloat(item.gross_salary) <= 21000
     }));
 
     const summary = esicData.reduce((acc, d) => {
+      acc.total_gross += d.gross_salary;
       acc.total_employee_esic += d.esic_employee;
       acc.total_employer_esic += d.esic_employer;
       acc.total_challan += d.total_esic;
       return acc;
-    }, { total_employee_esic: 0, total_employer_esic: 0, total_challan: 0 });
+    }, { total_gross: 0, total_employee_esic: 0, total_employer_esic: 0, total_challan: 0 });
 
     res.json({ month: parseInt(month), year: parseInt(year), summary, data: esicData });
   } catch (err) {
