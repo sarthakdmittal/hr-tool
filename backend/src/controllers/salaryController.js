@@ -96,11 +96,16 @@ exports.listStructures = async (req, res) => {
 exports.createStructure = async (req, res) => {
   try {
     const company_id = req.user.company_id;
-    const { name, description, earnings, deductions } = req.body;
+    const { name, description, earnings, deductions, apply_epf, apply_esic, apply_pt } = req.body;
 
     if (!name) return res.status(400).json({ error: 'Name is required' });
 
-    const structure = await SalaryStructure.create({ company_id, name, description });
+    const structure = await SalaryStructure.create({
+      company_id, name, description,
+      apply_epf: apply_epf !== false,
+      apply_esic: apply_esic !== false,
+      apply_pt: apply_pt !== false,
+    });
     await saveComponents(structure.id, earnings, deductions);
     res.status(201).json(structure);
   } catch (err) {
@@ -134,8 +139,13 @@ exports.updateStructure = async (req, res) => {
     const structure = await SalaryStructure.findOne({ where: { id, company_id } });
     if (!structure) return res.status(404).json({ error: 'Salary structure not found' });
 
-    const { name, description, is_active, earnings, deductions } = req.body;
-    await structure.update({ name, description, is_active });
+    const { name, description, is_active, earnings, deductions, apply_epf, apply_esic, apply_pt } = req.body;
+    await structure.update({
+      name, description, is_active,
+      apply_epf: apply_epf !== undefined ? Boolean(apply_epf) : structure.apply_epf,
+      apply_esic: apply_esic !== undefined ? Boolean(apply_esic) : structure.apply_esic,
+      apply_pt: apply_pt !== undefined ? Boolean(apply_pt) : structure.apply_pt,
+    });
     if (earnings || deductions) {
       await saveComponents(structure.id, earnings || [], deductions || []);
     }
