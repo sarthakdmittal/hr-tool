@@ -27,6 +27,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(morgan('dev'));
 
 // Routes
+app.use('/api/dashboard',        require('./routes/dashboard'));
 app.use('/api/auth',             require('./routes/auth'));
 app.use('/api/company',          require('./routes/company'));
 app.use('/api/settings',         require('./routes/company')); // alias
