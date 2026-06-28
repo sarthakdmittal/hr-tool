@@ -51,10 +51,11 @@ export default function ESICReport() {
   const monthOptions = getMonthOptions();
   const yearOptions = getYearOptions();
 
-  const { data: reportData, isLoading } = useQuery({
+  const { data: reportData, isLoading, isError } = useQuery({
     queryKey: ['report-esic', selectedMonth, selectedYear],
     queryFn: () =>
       api.get('/reports/esic', { params: { month: selectedMonth, year: selectedYear } }).then((r) => r.data),
+    throwOnError: false,
   });
 
   const data = reportData?.data || [];
@@ -187,6 +188,10 @@ export default function ESICReport() {
 
         {isLoading ? (
           <LoadingSpinner className="py-16" />
+        ) : isError ? (
+          <div className="py-12 text-center text-sm text-gray-400">
+            No ESIC data for this period. Run payroll first.
+          </div>
         ) : (
           <Table
             columns={columns}

@@ -146,7 +146,7 @@ function calculatePayrollForEmployee(employee, month, year, attendanceRecords, t
   // Step 6: Statutory deductions
   // EPF uses prorated basic (actual paid basic for the month), capped at ₹15,000
   const applyEPF  = salaryStructure?.apply_epf  !== false;
-  const applyESIC = salaryStructure?.apply_esic !== false;
+  const applyESIC = salaryStructure?.apply_esic === true; // explicit opt-in required
   const applyPT   = salaryStructure?.apply_pt   !== false;
 
   const basicForEPF = earningsMap['BASIC']?.amount ?? 0; // EPF only on explicit Basic component
@@ -155,11 +155,12 @@ function calculatePayrollForEmployee(employee, month, year, attendanceRecords, t
   const employerEPF = Math.round(epfBasic * 0.0367);
   const employerEPS = Math.round(epfBasic * 0.0833);
 
-  // ESIC: applicable if gross <= 21000
+  // ESIC per Indian standards: Employee 0.75%, Employer 3.25%, only when gross <= ₹21,000
+  // Applies only to structures where apply_esic = true (opt-in per structure)
   const employeeESIC = applyESIC && grossSalary <= 21000 ? Math.round(grossSalary * 0.0075) : 0;
   const employerESIC = applyESIC && grossSalary <= 21000 ? Math.round(grossSalary * 0.0325) : 0;
 
-  // Professional Tax
+  // Professional Tax (state-specific, opt-in per salary structure)
   const professionalTax = applyPT ? calculatePT(grossSalary) : 0;
 
   // TDS

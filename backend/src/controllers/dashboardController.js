@@ -25,8 +25,8 @@ exports.getStats = async (req, res) => {
       Leave.count({
         where: {
           status: 'approved',
-          start_date: { [Op.lte]: today },
-          end_date: { [Op.gte]: today },
+          from_date: { [Op.lte]: today },
+          to_date: { [Op.gte]: today },
         },
         include: [{
           model: Employee,
