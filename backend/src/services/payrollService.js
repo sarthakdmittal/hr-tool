@@ -99,29 +99,35 @@ function calculatePayrollForEmployee(employee, month, year, attendanceRecords, t
     else if (basicComp.calculation_type === 'fixed') fullMonthBasic = v;
   }
 
-  // 4b. Calculate each earning at full-month rate (no prorating yet)
+  // 4b. Calculate each earning at full-month rate — three passes:
+  //   Pass 1: fixed / percentage_of_ctc / percentage_of_basic
+  //   Pass 2: special_balance (CTC/12 minus all Pass-1 earnings)
+  //   Pass 3: percentage_of_gross (needs full-month gross from Passes 1+2)
   const earningsMap = {};
+
   for (const comp of earningComponents) {
+    if (comp.calculation_type === 'percentage_of_gross' || comp.calculation_type === 'special_balance') continue;
     const value = parseFloat(comp.value) || 0;
     const code  = comp.code || comp.name.toUpperCase().replace(/\s+/g, '_');
     let fullAmount = 0;
-
     switch (comp.calculation_type) {
       case 'percentage_of_ctc':   fullAmount = (value / 100) * ctc / 12; break;
       case 'percentage_of_basic': fullAmount = (value / 100) * fullMonthBasic; break;
       case 'fixed':               fullAmount = value; break;
-      case 'percentage_of_gross': fullAmount = 0; break; // recalculated below
       default:                    fullAmount = value;
     }
-
-    earningsMap[code] = {
-      name: comp.name, code, taxable: comp.taxable !== false, type: 'earning',
-      _full: fullAmount,          // full-month amount (before prorating)
-      amount: Math.round(fullAmount * proRate * 100) / 100  // prorated amount
-    };
+    earningsMap[code] = { name: comp.name, code, taxable: comp.taxable !== false, type: 'earning', _full: fullAmount, amount: Math.round(fullAmount * proRate * 100) / 100 };
   }
 
-  // 4c. Recalculate percentage_of_gross using full-month gross (not prorated gross)
+  for (const comp of earningComponents) {
+    if (comp.calculation_type !== 'special_balance') continue;
+    const code = comp.code || comp.name.toUpperCase().replace(/\s+/g, '_');
+    const otherSum = Object.values(earningsMap).reduce((s, e) => s + e._full, 0);
+    const fullAmount = Math.max(0, ctc / 12 - otherSum);
+    earningsMap[code] = { name: comp.name, code, taxable: comp.taxable !== false, type: 'earning', _full: fullAmount, amount: Math.round(fullAmount * proRate * 100) / 100 };
+  }
+
+  // 4c. percentage_of_gross — uses full-month gross from passes 1+2
   const fullMonthGross = Object.values(earningsMap).reduce((s, e) => s + e._full, 0);
   for (const comp of earningComponents) {
     if (comp.calculation_type !== 'percentage_of_gross') continue;

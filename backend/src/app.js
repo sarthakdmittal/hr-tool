@@ -49,11 +49,21 @@ app.use((err, req, res, next) => {
 
 const PORT = process.env.PORT || 5000;
 
+async function runMigrations() {
+  if (!process.env.DATABASE_URL) return;
+  try {
+    await sequelize.query(
+      `ALTER TABLE salary_components ALTER COLUMN calculation_type TYPE VARCHAR(50) USING calculation_type::text`
+    );
+  } catch (_) { /* already varchar, or table not yet created */ }
+}
+
 sequelize.authenticate()
   .then(() => {
     console.log('Database connected');
-    return sequelize.sync();
+    return runMigrations();
   })
+  .then(() => sequelize.sync())
   .then(() => {
     app.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);

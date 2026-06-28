@@ -26,7 +26,7 @@ const SalaryComponent = sequelize.define('SalaryComponent', {
     defaultValue: 'earning'
   },
   calculation_type: {
-    type: DataTypes.ENUM('fixed', 'percentage_of_ctc', 'percentage_of_basic', 'percentage_of_gross'),
+    type: DataTypes.STRING(50),
     allowNull: false,
     defaultValue: 'fixed'
   },
