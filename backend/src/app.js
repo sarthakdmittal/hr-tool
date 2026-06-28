@@ -49,11 +49,23 @@ app.use((err, req, res, next) => {
 
 const PORT = process.env.PORT || 5000;
 
+async function runMigrations() {
+  if (!process.env.DATABASE_URL) return; // SQLite is type-flexible, no migration needed
+  const queries = [
+    `ALTER TABLE salary_components ALTER COLUMN "type" TYPE VARCHAR(50) USING "type"::text`,
+    `ALTER TABLE salary_components ALTER COLUMN calculation_type TYPE VARCHAR(50) USING calculation_type::text`,
+  ];
+  for (const q of queries) {
+    try { await sequelize.query(q); } catch (_) { /* already varchar or table doesn't exist yet */ }
+  }
+}
+
 sequelize.authenticate()
   .then(() => {
     console.log('Database connected');
-    return sequelize.sync();
+    return runMigrations();
   })
+  .then(() => sequelize.sync())
   .then(() => {
     app.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);
