@@ -58,7 +58,7 @@ export default function TDSReport() {
       api.get('/reports/tds', { params: { month: selectedMonth, year: selectedYear } }).then((r) => r.data),
   });
 
-  const data = reportData?.data || [];
+  const data = Array.isArray(reportData?.data) ? reportData.data : [];
   const totalGross = data.reduce((s, r) => s + (r.gross_salary || r.gross || 0), 0);
   const totalTaxable = data.reduce((s, r) => s + (r.taxable_income || 0), 0);
   const totalTds = reportData?.total_tds ?? data.reduce((s, r) => s + (r.tds || 0), 0);

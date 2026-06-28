@@ -58,8 +58,8 @@ export default function PFReport() {
       api.get('/reports/pf', { params: { month: selectedMonth, year: selectedYear } }).then((r) => r.data),
   });
 
-  const data = reportData?.data || [];
-  const summary = reportData?.summary || {};
+  const data = Array.isArray(reportData?.data) ? reportData.data : [];
+  const summary = reportData?.summary && typeof reportData.summary === 'object' ? reportData.summary : {};
 
   const totalEpfEmp = summary.total_employee_pf ?? data.reduce((s, r) => s + (r.epf_employee || 0), 0);
   const totalEpfEr = summary.total_employer_pf ?? data.reduce((s, r) => s + (r.epf_employer || 0), 0);

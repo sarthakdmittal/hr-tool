@@ -58,8 +58,8 @@ export default function ESICReport() {
     throwOnError: false,
   });
 
-  const data = reportData?.data || [];
-  const summary = reportData?.summary || {};
+  const data = Array.isArray(reportData?.data) ? reportData.data : [];
+  const summary = reportData?.summary && typeof reportData.summary === 'object' ? reportData.summary : {};
 
   const totalGross = summary.total_gross ?? data.reduce((s, r) => s + (r.gross_salary || 0), 0);
   const totalEsicEmp = summary.total_employee_esic ?? data.reduce((s, r) => s + (r.esic_employee || 0), 0);
