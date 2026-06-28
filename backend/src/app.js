@@ -6,14 +6,25 @@ const { sequelize } = require('./models');
 
 const app = express();
 
-// Allow comma-separated list of origins e.g. "https://hr.vercel.app,http://localhost:3000"
+// Allow comma-separated list of origins. Supports wildcards, e.g. "https://*.vercel.app"
 const allowedOrigins = (process.env.FRONTEND_URL || 'http://localhost:3000')
   .split(',')
   .map(o => o.trim());
 
+function originAllowed(origin) {
+  return allowedOrigins.some(allowed => {
+    if (allowed === '*') return true;
+    if (allowed.includes('*')) {
+      const pattern = '^' + allowed.replace(/[.+^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '[^/]+') + '$';
+      return new RegExp(pattern).test(origin);
+    }
+    return allowed === origin;
+  });
+}
+
 app.use(cors({
   origin: (origin, cb) => {
-    if (!origin || allowedOrigins.includes(origin) || allowedOrigins.includes('*')) {
+    if (!origin || originAllowed(origin)) {
       cb(null, true);
     } else {
       cb(new Error(`CORS: ${origin} not allowed`));
