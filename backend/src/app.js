@@ -54,9 +54,11 @@ async function runMigrations() {
   if (!process.env.DATABASE_URL) return;
   const stmts = [
     `ALTER TABLE salary_components ALTER COLUMN calculation_type TYPE VARCHAR(50) USING calculation_type::text`,
-    `ALTER TABLE salary_structures ADD COLUMN IF NOT EXISTS apply_epf BOOLEAN DEFAULT true`,
-    `ALTER TABLE salary_structures ADD COLUMN IF NOT EXISTS apply_esic BOOLEAN DEFAULT true`,
-    `ALTER TABLE salary_structures ADD COLUMN IF NOT EXISTS apply_pt BOOLEAN DEFAULT true`,
+    `ALTER TABLE salary_structures ADD COLUMN IF NOT EXISTS apply_epf BOOLEAN DEFAULT false`,
+    `ALTER TABLE salary_structures ADD COLUMN IF NOT EXISTS apply_esic BOOLEAN DEFAULT false`,
+    `ALTER TABLE salary_structures ADD COLUMN IF NOT EXISTS apply_pt BOOLEAN DEFAULT false`,
+    // Reset any existing rows that got the old DEFAULT true so statutory deductions are opt-in
+    `UPDATE salary_structures SET apply_epf = false, apply_esic = false, apply_pt = false WHERE apply_epf = true AND apply_esic = true AND apply_pt = true`,
     `ALTER TABLE companies ADD COLUMN IF NOT EXISTS industry VARCHAR(100)`,
     `ALTER TABLE companies ADD COLUMN IF NOT EXISTS founded_year INTEGER`,
     `ALTER TABLE companies ADD COLUMN IF NOT EXISTS gstin VARCHAR(20)`,

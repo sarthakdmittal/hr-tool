@@ -159,9 +159,9 @@ export default function SalaryStructureForm() {
     defaultValues: {
       name: '',
       description: '',
-      apply_epf: true,
-      apply_esic: true,
-      apply_pt: true,
+      apply_epf: false,
+      apply_esic: false,
+      apply_pt: false,
       earnings: DEFAULT_EARNINGS,
       deductions: DEFAULT_DEDUCTIONS,
     },

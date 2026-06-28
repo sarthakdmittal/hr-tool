@@ -149,7 +149,7 @@ function calculatePayrollForEmployee(employee, month, year, attendanceRecords, t
   const applyESIC = salaryStructure?.apply_esic !== false;
   const applyPT   = salaryStructure?.apply_pt   !== false;
 
-  const basicForEPF = earningsMap['BASIC']?.amount ?? Object.values(earningsMap)[0]?.amount ?? 0;
+  const basicForEPF = earningsMap['BASIC']?.amount ?? 0; // EPF only on explicit Basic component
   const epfBasic = applyEPF ? Math.min(basicForEPF, 15000) : 0;
   const employeeEPF = Math.round(epfBasic * 0.12);
   const employerEPF = Math.round(epfBasic * 0.0367);

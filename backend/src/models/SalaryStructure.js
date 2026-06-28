@@ -25,15 +25,15 @@ const SalaryStructure = sequelize.define('SalaryStructure', {
   },
   apply_epf: {
     type: DataTypes.BOOLEAN,
-    defaultValue: true
+    defaultValue: false
   },
   apply_esic: {
     type: DataTypes.BOOLEAN,
-    defaultValue: true
+    defaultValue: false
   },
   apply_pt: {
     type: DataTypes.BOOLEAN,
-    defaultValue: true
+    defaultValue: false
   }
 }, {
   tableName: 'salary_structures'
