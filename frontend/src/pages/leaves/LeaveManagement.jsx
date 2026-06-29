@@ -25,7 +25,7 @@ function RequestsTab() {
   const [rejectReason, setRejectReason] = useState('');
   const [applyModal, setApplyModal] = useState(false);
 
-  const { data: leaves = [], isLoading } = useQuery({
+  const { data: leaves = [], isLoading, isError, error } = useQuery({
     queryKey: ['leaves', statusFilter, employeeFilter],
     queryFn: () => api.get('/leaves', {
       params: {
@@ -187,6 +187,11 @@ function RequestsTab() {
         ))}
       </div>
 
+      {isError && (
+        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          Failed to load leave requests: {error?.response?.data?.error || error?.message || 'Unknown error'}
+        </div>
+      )}
       <div className="card p-0">
         <Table columns={columns} data={filtered} loading={isLoading} emptyMessage="No leave requests found" />
       </div>

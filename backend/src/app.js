@@ -104,6 +104,16 @@ async function runMigrations() {
     `UPDATE leave_types SET is_active = TRUE WHERE is_active IS NULL`,
     `UPDATE leave_types SET carry_forward = FALSE WHERE carry_forward IS NULL`,
     `UPDATE leave_types SET max_carry_forward_days = 0 WHERE max_carry_forward_days IS NULL`,
+    // Ensure leaves table has all columns (may be missing if table was created before model was updated)
+    `ALTER TABLE leaves ADD COLUMN IF NOT EXISTS rejection_reason TEXT`,
+    `ALTER TABLE leaves ADD COLUMN IF NOT EXISTS approved_by INTEGER`,
+    `ALTER TABLE leaves ADD COLUMN IF NOT EXISTS approved_at TIMESTAMP WITH TIME ZONE`,
+    // Add 'cancelled' to the status ENUM if it was created before that value existed
+    `DO $$ BEGIN
+       IF NOT EXISTS (SELECT 1 FROM pg_enum WHERE enumlabel = 'cancelled'
+         AND enumtypid = (SELECT oid FROM pg_type WHERE typname = 'enum_leaves_status'))
+       THEN ALTER TYPE "enum_leaves_status" ADD VALUE 'cancelled'; END IF;
+     END $$`,
   ];
   for (const sql of stmts) {
     try { await sequelize.query(sql); } catch (_) { /* already applied */ }
