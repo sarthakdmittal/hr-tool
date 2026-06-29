@@ -108,6 +108,8 @@ async function runMigrations() {
     `ALTER TABLE leaves ADD COLUMN IF NOT EXISTS rejection_reason TEXT`,
     `ALTER TABLE leaves ADD COLUMN IF NOT EXISTS approved_by INTEGER`,
     `ALTER TABLE leaves ADD COLUMN IF NOT EXISTS approved_at TIMESTAMP WITH TIME ZONE`,
+    `ALTER TABLE leaves ADD COLUMN IF NOT EXISTS "createdAt" TIMESTAMP WITH TIME ZONE DEFAULT NOW()`,
+    `ALTER TABLE leaves ADD COLUMN IF NOT EXISTS "updatedAt" TIMESTAMP WITH TIME ZONE DEFAULT NOW()`,
     // Add 'cancelled' to the status ENUM if it was created before that value existed
     `DO $$ BEGIN
        IF NOT EXISTS (SELECT 1 FROM pg_enum WHERE enumlabel = 'cancelled'
