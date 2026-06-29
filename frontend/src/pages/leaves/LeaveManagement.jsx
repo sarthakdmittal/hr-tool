@@ -340,8 +340,7 @@ function ApplyLeaveModal({ isOpen, onClose, employees, leaveTypes, onSubmit, isP
 function AllocationsTab() {
   const queryClient = useQueryClient();
   const [year, setYear] = useState(getCurrentYear());
-  const [editEmployee, setEditEmployee] = useState(null);
-  const [expanded, setExpanded] = useState(null);
+  const [selectedEmployeeId, setSelectedEmployeeId] = useState('');
   const yearOptions = getYearOptions();
 
   const { data, isLoading } = useQuery({
@@ -364,6 +363,7 @@ function AllocationsTab() {
 
   const employees = Array.isArray(data?.employees) ? data.employees : [];
   const leaveTypes = Array.isArray(data?.leave_types) ? data.leave_types : [];
+  const selectedEmployee = employees.find(e => String(e.employee_id) === selectedEmployeeId) || null;
 
   if (isLoading) return <LoadingSpinner className="py-12" />;
 
@@ -376,74 +376,67 @@ function AllocationsTab() {
   }
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <p className="text-sm text-gray-500">Set custom leave days per employee. Leave blank to use the leave type default.</p>
-        <select className="form-select w-28" value={year} onChange={e => setYear(parseInt(e.target.value))}>
-          {yearOptions.map(y => <option key={y.value} value={y.value}>{y.label}</option>)}
-        </select>
+    <div className="space-y-5">
+      {/* Filters */}
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="flex-1 min-w-48">
+          <label className="form-label">Employee</label>
+          <select
+            className="form-select"
+            value={selectedEmployeeId}
+            onChange={e => setSelectedEmployeeId(e.target.value)}
+          >
+            <option value="">Select an employee</option>
+            {employees.map(e => (
+              <option key={e.employee_id} value={e.employee_id}>
+                {e.name} ({e.emp_id})
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="w-28">
+          <label className="form-label">Year</label>
+          <select className="form-select" value={year} onChange={e => setYear(parseInt(e.target.value))}>
+            {yearOptions.map(y => <option key={y.value} value={y.value}>{y.label}</option>)}
+          </select>
+        </div>
       </div>
 
-      {employees.length === 0 ? (
-        <div className="card text-center py-12 text-sm text-gray-400">No active employees found.</div>
-      ) : (
-        <div className="space-y-2">
-          {employees.map(emp => (
-            <div key={emp.employee_id} className="card p-0">
-              <button
-                className="w-full flex items-center justify-between px-5 py-4 text-left hover:bg-gray-50 transition-colors rounded-xl"
-                onClick={() => setExpanded(expanded === emp.employee_id ? null : emp.employee_id)}
-              >
-                <div className="flex items-center gap-3">
-                  <div className="h-9 w-9 rounded-full bg-primary-100 flex items-center justify-center text-primary-700 font-semibold text-sm">
-                    {emp.name.charAt(0)}
-                  </div>
-                  <div>
-                    <p className="font-medium text-gray-900">{emp.name}</p>
-                    <p className="text-xs text-gray-500">{emp.emp_id}</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-4">
-                  <div className="hidden sm:flex gap-3">
-                    {emp.balances.map(b => (
-                      <div key={b.leave_type_id} className="text-center">
-                        <p className="text-xs text-gray-400">{b.code}</p>
-                        <p className={`text-sm font-semibold ${b.balance <= 2 ? 'text-red-600' : 'text-gray-900'}`}>
-                          {b.balance}/{b.allocated}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                  {expanded === emp.employee_id ? <ChevronUp className="h-4 w-4 text-gray-400" /> : <ChevronDown className="h-4 w-4 text-gray-400" />}
-                </div>
-              </button>
-
-              {expanded === emp.employee_id && (
-                <div className="border-t border-gray-100 px-5 py-4">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {emp.balances.map(b => (
-                      <AllocationCard
-                        key={b.leave_type_id}
-                        balance={b}
-                        year={year}
-                        employeeId={emp.employee_id}
-                        onSave={(days) => setMutation.mutate({ employee_id: emp.employee_id, leave_type_id: b.leave_type_id, year, allocated_days: days })}
-                        onReset={() => deleteMutation.mutate(b.allocation_id)}
-                        isSaving={setMutation.isPending}
-                      />
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          ))}
+      {!selectedEmployeeId ? (
+        <div className="card text-center py-16">
+          <Users className="h-10 w-10 text-gray-300 mx-auto mb-3" />
+          <p className="text-gray-500 text-sm font-medium">Select an employee to view and edit their leave allocation</p>
+          <p className="text-gray-400 text-xs mt-1">Click the pencil icon on any leave type card to override the default days</p>
         </div>
-      )}
+      ) : !selectedEmployee ? (
+        <div className="card text-center py-12 text-sm text-gray-400">Employee not found.</div>
+      ) : (
+        <div className="space-y-4">
+          {/* Employee header */}
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-10 rounded-full bg-primary-100 flex items-center justify-center text-primary-700 font-bold">
+              {selectedEmployee.name.charAt(0)}
+            </div>
+            <div>
+              <p className="font-semibold text-gray-900">{selectedEmployee.name}</p>
+              <p className="text-xs text-gray-500">{selectedEmployee.emp_id} · {year}</p>
+            </div>
+          </div>
 
-      {editEmployee && (
-        <Modal isOpen onClose={() => setEditEmployee(null)} title="Edit Allocations" size="md">
-          <p>Edit allocations for {editEmployee.name}</p>
-        </Modal>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {selectedEmployee.balances.map(b => (
+              <AllocationCard
+                key={b.leave_type_id}
+                balance={b}
+                year={year}
+                employeeId={selectedEmployee.employee_id}
+                onSave={(days) => setMutation.mutate({ employee_id: selectedEmployee.employee_id, leave_type_id: b.leave_type_id, year, allocated_days: days })}
+                onReset={() => deleteMutation.mutate(b.allocation_id)}
+                isSaving={setMutation.isPending}
+              />
+            ))}
+          </div>
+        </div>
       )}
     </div>
   );
