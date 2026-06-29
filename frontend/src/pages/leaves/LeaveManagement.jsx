@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 import {
-  Plus, Search, CheckCircle, XCircle, Eye, Pencil, Trash2,
+  Plus, CheckCircle, XCircle, Eye, Pencil, Trash2,
   CalendarDays, Users, Settings2, ChevronDown, ChevronUp,
 } from 'lucide-react';
 import api from '../../api/client';
@@ -18,7 +18,7 @@ const TABS = ['Requests', 'Allocations', 'Leave Types'];
 
 function RequestsTab() {
   const queryClient = useQueryClient();
-  const [search, setSearch] = useState('');
+  const [employeeFilter, setEmployeeFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [viewLeave, setViewLeave] = useState(null);
   const [rejectModal, setRejectModal] = useState(null);
@@ -26,8 +26,13 @@ function RequestsTab() {
   const [applyModal, setApplyModal] = useState(false);
 
   const { data: leaves = [], isLoading } = useQuery({
-    queryKey: ['leaves', statusFilter],
-    queryFn: () => api.get('/leaves', { params: { status: statusFilter || undefined } }).then(r => r.data),
+    queryKey: ['leaves', statusFilter, employeeFilter],
+    queryFn: () => api.get('/leaves', {
+      params: {
+        status: statusFilter || undefined,
+        employee_id: employeeFilter || undefined,
+      },
+    }).then(r => r.data),
     throwOnError: false,
   });
 
@@ -76,11 +81,7 @@ function RequestsTab() {
     onError: (e) => toast.error(e.response?.data?.error || 'Failed to apply leave'),
   });
 
-  const filtered = leaves.filter(l =>
-    !search ||
-    l.employee_name?.toLowerCase().includes(search.toLowerCase()) ||
-    l.emp_id?.toLowerCase().includes(search.toLowerCase())
-  );
+  const filtered = leaves;
 
   const columns = [
     {
@@ -147,14 +148,18 @@ function RequestsTab() {
     <div className="space-y-4">
       <div className="flex flex-col sm:flex-row gap-3 justify-between">
         <div className="flex gap-3 flex-1">
-          <div className="relative flex-1 max-w-xs">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <input
-              type="text" placeholder="Search employee..."
-              value={search} onChange={e => setSearch(e.target.value)}
-              className="form-input pl-9"
-            />
-          </div>
+          <select
+            value={employeeFilter}
+            onChange={e => setEmployeeFilter(e.target.value)}
+            className="form-select flex-1 max-w-xs"
+          >
+            <option value="">All Employees</option>
+            {employees.map(e => (
+              <option key={e.id} value={e.id}>
+                {e.first_name} {e.last_name} ({e.emp_id})
+              </option>
+            ))}
+          </select>
           <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className="form-select w-36">
             <option value="">All Status</option>
             <option value="pending">Pending</option>
