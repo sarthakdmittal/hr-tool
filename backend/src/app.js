@@ -115,11 +115,7 @@ async function runMigrations() {
     `ALTER TABLE leave_allocations ADD COLUMN IF NOT EXISTS created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()`,
     `ALTER TABLE leave_allocations ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()`,
     // Add 'cancelled' to the status ENUM if it was created before that value existed
-    `DO $$ BEGIN
-       IF NOT EXISTS (SELECT 1 FROM pg_enum WHERE enumlabel = 'cancelled'
-         AND enumtypid = (SELECT oid FROM pg_type WHERE typname = 'enum_leaves_status'))
-       THEN ALTER TYPE "enum_leaves_status" ADD VALUE 'cancelled'; END IF;
-     END $$`,
+    `ALTER TYPE "enum_leaves_status" ADD VALUE IF NOT EXISTS 'cancelled'`,
   ];
   for (const sql of stmts) {
     try { await sequelize.query(sql); } catch (_) { /* already applied */ }

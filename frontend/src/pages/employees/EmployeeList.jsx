@@ -20,7 +20,7 @@ function useEmployees() {
 
 export default function EmployeeList() {
   const navigate = useNavigate();
-  const { data: employees, isLoading, isError } = useEmployees();
+  const { data: employees, isLoading, isError, error } = useEmployees();
 
   const [search, setSearch] = useState('');
   const [departmentFilter, setDepartmentFilter] = useState('');
@@ -114,7 +114,8 @@ export default function EmployeeList() {
     return (
       <div className="flex flex-col items-center justify-center py-24 text-gray-400 gap-3">
         <Users className="h-12 w-12 text-gray-300" />
-        <p className="text-sm">Failed to load employees. Please refresh.</p>
+        <p className="text-sm font-medium text-red-600">Failed to load employees</p>
+        <p className="text-xs text-gray-500">{error?.response?.data?.error || error?.message || 'Unknown error'}</p>
       </div>
     );
   }
