@@ -27,6 +27,8 @@ const STATUS_OPTIONS = [
   { value: 'W',    label: 'Weekly Off',     color: 'bg-indigo-500',  pillCls: 'bg-indigo-100 text-indigo-800 border border-indigo-300', pay: 1.0 },
   { value: 'P/2',  label: 'Half Day',       color: 'bg-yellow-400',  pillCls: 'bg-yellow-100 text-yellow-800 border border-yellow-300', pay: 0.5 },
   { value: 'H',    label: 'Holiday',        color: 'bg-gray-400',    pillCls: 'bg-gray-100 text-gray-700 border border-gray-300',       pay: 1.0 },
+  { value: 'L',    label: 'Leave',          color: 'bg-blue-500',    pillCls: 'bg-blue-100 text-blue-800 border border-blue-300',       pay: 1.0 },
+  { value: 'LOP',  label: 'Leave (Unpaid)', color: 'bg-pink-500',    pillCls: 'bg-pink-100 text-pink-800 border border-pink-300',       pay: 0   },
   { value: 'OT',   label: 'Overtime',       color: 'bg-orange-500',  pillCls: 'bg-orange-100 text-orange-800 border border-orange-300', pay: 1.0 },
   { value: 'OT/2', label: 'Overtime ½ Day', color: 'bg-orange-300',  pillCls: 'bg-orange-50 text-orange-700 border border-orange-200',  pay: 0.5 },
 ];
@@ -34,7 +36,7 @@ const STATUS_OPTIONS = [
 const OPT_MAP = Object.fromEntries(STATUS_OPTIONS.map(o => [o.value, o]));
 
 // Statuses that cannot be combined with others
-const EXCLUSIVE = new Set(['A']);
+const EXCLUSIVE = new Set(['A', 'L', 'LOP']);
 // OT codes can only appear alongside another base code
 const OT_CODES = new Set(['OT', 'OT/2']);
 
