@@ -93,6 +93,17 @@ async function runMigrations() {
       "updatedAt" TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
       UNIQUE (employee_id, leave_type_id, year)
     )`,
+    // Ensure leave_types columns exist (they may be missing if table was created before model was updated)
+    `ALTER TABLE leave_types ADD COLUMN IF NOT EXISTS paid BOOLEAN`,
+    `ALTER TABLE leave_types ADD COLUMN IF NOT EXISTS is_active BOOLEAN`,
+    `ALTER TABLE leave_types ADD COLUMN IF NOT EXISTS carry_forward BOOLEAN`,
+    `ALTER TABLE leave_types ADD COLUMN IF NOT EXISTS max_carry_forward_days DECIMAL(5,1)`,
+    `ALTER TABLE leave_types ADD COLUMN IF NOT EXISTS description TEXT`,
+    // Backfill NULL values to sensible defaults
+    `UPDATE leave_types SET paid = TRUE WHERE paid IS NULL`,
+    `UPDATE leave_types SET is_active = TRUE WHERE is_active IS NULL`,
+    `UPDATE leave_types SET carry_forward = FALSE WHERE carry_forward IS NULL`,
+    `UPDATE leave_types SET max_carry_forward_days = 0 WHERE max_carry_forward_days IS NULL`,
   ];
   for (const sql of stmts) {
     try { await sequelize.query(sql); } catch (_) { /* already applied */ }

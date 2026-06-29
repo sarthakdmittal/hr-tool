@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 import {
@@ -611,18 +611,18 @@ function LeaveTypesTab() {
   );
 }
 
-function LeaveTypeModal({ isOpen, initialData, onClose, onSubmit, isPending }) {
-  const blank = { name: '', code: '', days_allowed_per_year: 12, paid: true, carry_forward: false, max_carry_forward_days: 0, description: '', is_active: true };
-  const [form, setForm] = useState(blank);
+const BLANK_LEAVE_TYPE = { name: '', code: '', days_allowed_per_year: 12, paid: true, carry_forward: false, max_carry_forward_days: 0, description: '', is_active: true };
 
-  // Reset form when modal opens
-  if (isOpen && form.name === '' && initialData) {
-    setForm({ ...blank, ...initialData });
-  }
+function LeaveTypeModal({ isOpen, initialData, onClose, onSubmit, isPending }) {
+  const [form, setForm] = useState(BLANK_LEAVE_TYPE);
+
+  useEffect(() => {
+    if (isOpen) {
+      setForm(initialData ? { ...BLANK_LEAVE_TYPE, ...initialData } : BLANK_LEAVE_TYPE);
+    }
+  }, [isOpen, initialData]);
 
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
-
-  const handleOpen = () => setForm(initialData ? { ...blank, ...initialData } : blank);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -630,7 +630,7 @@ function LeaveTypeModal({ isOpen, initialData, onClose, onSubmit, isPending }) {
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title={initialData ? 'Edit Leave Type' : 'Add Leave Type'} size="md" onAfterOpen={handleOpen}>
+    <Modal isOpen={isOpen} onClose={onClose} title={initialData ? 'Edit Leave Type' : 'Add Leave Type'} size="md">
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="grid grid-cols-2 gap-3">
           <div>

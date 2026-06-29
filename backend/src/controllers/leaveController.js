@@ -24,9 +24,10 @@ exports.createLeaveType = async (req, res) => {
     const leaveType = await LeaveType.create({
       company_id, name, code,
       days_allowed_per_year: days_allowed_per_year || 0,
-      carry_forward: carry_forward || false,
+      carry_forward: !!carry_forward,
       max_carry_forward_days: max_carry_forward_days || 0,
       paid: paid !== false,
+      is_active: true,
       description,
     });
     res.status(201).json(leaveType);
@@ -80,7 +81,7 @@ exports.listAllocations = async (req, res) => {
         attributes: ['id', 'emp_id', 'first_name', 'last_name'],
         order: [['first_name', 'ASC'], ['last_name', 'ASC']],
       }),
-      LeaveType.findAll({ where: { company_id, is_active: true }, order: [['name', 'ASC']] }),
+      LeaveType.findAll({ where: { company_id, is_active: { [Op.ne]: false } }, order: [['name', 'ASC']] }),
     ]);
 
     const empIds = employees.map(e => e.id);
