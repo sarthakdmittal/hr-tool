@@ -131,28 +131,9 @@ sequelize.authenticate()
   .then(() => {
     app.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);
-      startKeepAlive();
     });
   })
   .catch(err => {
     console.error('Failed to connect to database:', err);
     process.exit(1);
   });
-
-// Ping own /api/health every 14 min so Render free tier doesn't sleep
-function startKeepAlive() {
-  const selfUrl = process.env.RENDER_EXTERNAL_URL;
-  if (!selfUrl) return; // only active on Render
-
-  const INTERVAL = 14 * 60 * 1000; // 14 minutes
-  setInterval(async () => {
-    try {
-      const res = await fetch(`${selfUrl}/api/health`);
-      console.log(`[keep-alive] ping ${res.status}`);
-    } catch (e) {
-      console.warn('[keep-alive] ping failed:', e.message);
-    }
-  }, INTERVAL);
-
-  console.log(`[keep-alive] pinging ${selfUrl}/api/health every 14 min`);
-}
