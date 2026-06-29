@@ -348,7 +348,7 @@ function AllocationsTab() {
   const [selectedEmployeeId, setSelectedEmployeeId] = useState('');
   const yearOptions = getYearOptions();
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError: allocError, error: allocErrorObj } = useQuery({
     queryKey: ['leave-allocations', year],
     queryFn: () => api.get('/leaves/allocations', { params: { year } }).then(r => r.data),
     throwOnError: false,
@@ -371,6 +371,14 @@ function AllocationsTab() {
   const selectedEmployee = employees.find(e => String(e.employee_id) === selectedEmployeeId) || null;
 
   if (isLoading) return <LoadingSpinner className="py-12" />;
+
+  if (allocError) {
+    return (
+      <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        Failed to load allocations: {allocErrorObj?.response?.data?.error || allocErrorObj?.message || 'Unknown error'}
+      </div>
+    );
+  }
 
   if (leaveTypes.length === 0) {
     return (
