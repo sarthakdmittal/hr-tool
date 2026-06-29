@@ -204,7 +204,7 @@ exports.listLeaves = async (req, res) => {
         { model: Employee, where: employeeWhere, attributes: ['id', 'emp_id', 'first_name', 'last_name'] },
         { model: LeaveType, attributes: ['id', 'name', 'code'] },
       ],
-      order: [['createdAt', 'DESC']],
+      order: [['created_at', 'DESC']],
     });
 
     const result = leaves.map(l => ({

@@ -108,8 +108,12 @@ async function runMigrations() {
     `ALTER TABLE leaves ADD COLUMN IF NOT EXISTS rejection_reason TEXT`,
     `ALTER TABLE leaves ADD COLUMN IF NOT EXISTS approved_by INTEGER`,
     `ALTER TABLE leaves ADD COLUMN IF NOT EXISTS approved_at TIMESTAMP WITH TIME ZONE`,
-    `ALTER TABLE leaves ADD COLUMN IF NOT EXISTS "createdAt" TIMESTAMP WITH TIME ZONE DEFAULT NOW()`,
-    `ALTER TABLE leaves ADD COLUMN IF NOT EXISTS "updatedAt" TIMESTAMP WITH TIME ZONE DEFAULT NOW()`,
+    // Sequelize global config maps to created_at/updated_at (snake_case) — add if missing
+    `ALTER TABLE leaves ADD COLUMN IF NOT EXISTS created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()`,
+    `ALTER TABLE leaves ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()`,
+    // leave_allocations was created manually with "createdAt"/"updatedAt" (camelCase) — add snake_case aliases
+    `ALTER TABLE leave_allocations ADD COLUMN IF NOT EXISTS created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()`,
+    `ALTER TABLE leave_allocations ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()`,
     // Add 'cancelled' to the status ENUM if it was created before that value existed
     `DO $$ BEGIN
        IF NOT EXISTS (SELECT 1 FROM pg_enum WHERE enumlabel = 'cancelled'
