@@ -83,6 +83,16 @@ async function runMigrations() {
     `ALTER TABLE companies ADD COLUMN IF NOT EXISTS esic_employee_rate DECIMAL(5,2)`,
     `ALTER TABLE companies ADD COLUMN IF NOT EXISTS epf_ceiling INTEGER`,
     `ALTER TABLE companies ADD COLUMN IF NOT EXISTS esic_ceiling INTEGER`,
+    `CREATE TABLE IF NOT EXISTS leave_allocations (
+      id SERIAL PRIMARY KEY,
+      employee_id INTEGER NOT NULL,
+      leave_type_id INTEGER NOT NULL,
+      year INTEGER NOT NULL,
+      allocated_days DECIMAL(5,1) NOT NULL DEFAULT 0,
+      "createdAt" TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+      "updatedAt" TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+      UNIQUE (employee_id, leave_type_id, year)
+    )`,
   ];
   for (const sql of stmts) {
     try { await sequelize.query(sql); } catch (_) { /* already applied */ }
