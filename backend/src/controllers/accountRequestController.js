@@ -94,7 +94,8 @@ exports.approveRequest = async (req, res) => {
       return res.status(400).json({ error: 'An account with this email already exists' });
     }
 
-    // Create the user — password already hashed in AccountRequest, bypass hook with direct insert
+    // Create the user — password stored as plain text in account_requests,
+    // User model's beforeCreate hook will hash it
     await User.create({
       name: request.name,
       email: request.email,
@@ -102,7 +103,7 @@ exports.approveRequest = async (req, res) => {
       role: 'employee',
       company_id,
       employee_id: request.employee_id,
-    }, { hooks: false }); // skip re-hash since already hashed
+    });
 
     await request.update({ status: 'approved', hr_notes: req.body.hr_notes || request.hr_notes });
 
