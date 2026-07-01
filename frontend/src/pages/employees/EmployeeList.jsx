@@ -1,11 +1,13 @@
 import { useState, useMemo } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate, Link } from 'react-router-dom';
-import { Plus, Search, Filter, Users, Edit } from 'lucide-react';
+import { Plus, Search, Filter, Users, Edit, Trash2 } from 'lucide-react';
+import toast from 'react-hot-toast';
 import api from '../../api/client';
 import Table from '../../components/Table';
 import Badge from '../../components/Badge';
 import LoadingSpinner from '../../components/LoadingSpinner';
+import Modal from '../../components/Modal';
 import { formatDate } from '../../utils/formatters';
 
 const STATUSES = ['', 'active', 'inactive', 'terminated'];
@@ -20,11 +22,25 @@ function useEmployees() {
 
 export default function EmployeeList() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { data: employees, isLoading, isError, error } = useEmployees();
 
   const [search, setSearch] = useState('');
   const [departmentFilter, setDepartmentFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+  const [deleteTarget, setDeleteTarget] = useState(null);
+
+  const deleteMutation = useMutation({
+    mutationFn: (id) => api.delete(`/employees/${id}`),
+    onSuccess: () => {
+      toast.success('Employee deactivated');
+      setDeleteTarget(null);
+      queryClient.invalidateQueries({ queryKey: ['employees'] });
+    },
+    onError: (err) => {
+      toast.error(err.response?.data?.error || 'Failed to deactivate employee');
+    },
+  });
 
   const departments = useMemo(() => {
     if (!employees) return [];
@@ -96,16 +112,30 @@ export default function EmployeeList() {
       accessor: 'id',
       cellClassName: 'text-right',
       render: (_val, row) => (
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            navigate(`/employees/${row.id}/edit`);
-          }}
-          className="inline-flex items-center gap-1.5 text-xs font-medium text-gray-600 hover:text-primary-600 border border-gray-200 hover:border-primary-300 bg-white hover:bg-primary-50 px-2.5 py-1.5 rounded-lg transition"
-        >
-          <Edit className="h-3.5 w-3.5" />
-          Edit
-        </button>
+        <div className="flex items-center justify-end gap-2">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              navigate(`/employees/${row.id}/edit`);
+            }}
+            className="inline-flex items-center gap-1.5 text-xs font-medium text-gray-600 hover:text-primary-600 border border-gray-200 hover:border-primary-300 bg-white hover:bg-primary-50 px-2.5 py-1.5 rounded-lg transition"
+          >
+            <Edit className="h-3.5 w-3.5" />
+            Edit
+          </button>
+          {row.status !== 'inactive' && row.status !== 'terminated' && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setDeleteTarget(row);
+              }}
+              className="inline-flex items-center gap-1.5 text-xs font-medium text-red-600 hover:text-red-700 border border-red-200 hover:border-red-300 bg-white hover:bg-red-50 px-2.5 py-1.5 rounded-lg transition"
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+              Deactivate
+            </button>
+          )}
+        </div>
       ),
     },
   ];
@@ -198,6 +228,38 @@ export default function EmployeeList() {
           onRowClick={(row) => navigate(`/employees/${row.id}`)}
         />
       </div>
+
+      {/* Deactivate Confirm Modal */}
+      <Modal
+        isOpen={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        title="Deactivate Employee"
+        size="sm"
+        footer={
+          <>
+            <button className="btn-secondary" onClick={() => setDeleteTarget(null)}>Cancel</button>
+            <button
+              className="btn-danger"
+              onClick={() => deleteMutation.mutate(deleteTarget.id)}
+              disabled={deleteMutation.isPending}
+            >
+              {deleteMutation.isPending ? (
+                <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+              ) : (
+                <Trash2 className="h-4 w-4" />
+              )}
+              Deactivate
+            </button>
+          </>
+        }
+      >
+        <p className="text-gray-700">
+          Deactivate <span className="font-semibold">{deleteTarget?.first_name} {deleteTarget?.last_name}</span>?
+        </p>
+        <p className="text-sm text-gray-500 mt-1">
+          Their status will be set to inactive. You can reactivate them by editing the employee.
+        </p>
+      </Modal>
     </div>
   );
 }

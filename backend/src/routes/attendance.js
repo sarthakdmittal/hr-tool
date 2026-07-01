@@ -8,5 +8,6 @@ router.post('/bulk', auth, attendanceController.bulkMarkAttendance);
 router.get('/', auth, attendanceController.listAttendance);
 router.get('/report', auth, attendanceController.getAttendanceReport);
 router.get('/employee/:employee_id/summary', auth, attendanceController.getEmployeeAttendanceSummary);
+router.delete('/clear', auth, attendanceController.clearAttendance);
 
 module.exports = router;

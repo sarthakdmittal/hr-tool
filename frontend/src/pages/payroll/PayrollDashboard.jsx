@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { Play, Download, Eye, FileText } from 'lucide-react';
+import { Play, Download, Eye, Trash2 } from 'lucide-react';
 import api from '../../api/client';
 import Modal from '../../components/Modal';
 import Badge from '../../components/Badge';
@@ -180,6 +180,7 @@ export default function PayrollDashboard() {
   const [selectedMonth, setSelectedMonth] = useState(getCurrentMonth());
   const [selectedYear, setSelectedYear] = useState(getCurrentYear());
   const [confirmModalOpen, setConfirmModalOpen] = useState(false);
+  const [deleteRunModalOpen, setDeleteRunModalOpen] = useState(false);
   const [slipModalOpen, setSlipModalOpen] = useState(false);
   const [selectedSlipId, setSelectedSlipId] = useState(null);
   const [downloadingId, setDownloadingId] = useState(null);
@@ -208,6 +209,18 @@ export default function PayrollDashboard() {
     },
     onError: (err) => {
       toast.error(err.response?.data?.message || 'Failed to run payroll');
+    },
+  });
+
+  const deleteRunMutation = useMutation({
+    mutationFn: (runId) => api.delete(`/payroll/runs/${runId}`),
+    onSuccess: () => {
+      toast.success('Payroll run deleted');
+      setDeleteRunModalOpen(false);
+      queryClient.invalidateQueries({ queryKey: ['payroll', selectedMonth, selectedYear] });
+    },
+    onError: (err) => {
+      toast.error(err.response?.data?.error || 'Failed to delete payroll run');
     },
   });
 
@@ -343,10 +356,18 @@ export default function PayrollDashboard() {
             Run Payroll
           </button>
           {runInfo && (
-            <Badge
-              label={runInfo.status}
-              status={runInfo.status}
-            />
+            <>
+              <Badge label={runInfo.status} status={runInfo.status} />
+              {runInfo.status !== 'locked' && (
+                <button
+                  className="btn-danger px-4"
+                  onClick={() => setDeleteRunModalOpen(true)}
+                >
+                  <Trash2 className="h-4 w-4" />
+                  Delete Run
+                </button>
+              )}
+            </>
           )}
         </div>
       </div>
@@ -415,6 +436,38 @@ export default function PayrollDashboard() {
             Ensure attendance is finalized before running payroll.
           </div>
         </div>
+      </Modal>
+
+      {/* Delete Run Modal */}
+      <Modal
+        isOpen={deleteRunModalOpen}
+        onClose={() => setDeleteRunModalOpen(false)}
+        title="Delete Payroll Run"
+        size="sm"
+        footer={
+          <>
+            <button className="btn-secondary" onClick={() => setDeleteRunModalOpen(false)}>Cancel</button>
+            <button
+              className="btn-danger"
+              onClick={() => deleteRunMutation.mutate(runInfo?.id)}
+              disabled={deleteRunMutation.isPending}
+            >
+              {deleteRunMutation.isPending ? (
+                <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+              ) : (
+                <Trash2 className="h-4 w-4" />
+              )}
+              Delete
+            </button>
+          </>
+        }
+      >
+        <p className="text-gray-700">
+          Delete payroll run for <span className="font-semibold">{monthLabel} {selectedYear}</span>?
+        </p>
+        <p className="text-sm text-gray-500 mt-1">
+          All payslips for this period will be permanently removed. This cannot be undone.
+        </p>
       </Modal>
 
       {/* View Slip Modal */}

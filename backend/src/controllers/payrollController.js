@@ -374,6 +374,24 @@ exports.getSlipPDF = async (req, res) => {
   }
 };
 
+exports.deleteRun = async (req, res) => {
+  try {
+    const { run_id } = req.params;
+    const company_id = req.user.company_id;
+
+    const run = await PayrollRun.findOne({ where: { id: run_id, company_id } });
+    if (!run) return res.status(404).json({ error: 'Payroll run not found' });
+    if (run.status === 'locked') return res.status(400).json({ error: 'Cannot delete a locked payroll run' });
+
+    await PayrollItem.destroy({ where: { payroll_run_id: run_id } });
+    await run.destroy();
+
+    res.json({ message: 'Payroll run deleted' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
 exports.lockRun = async (req, res) => {
   try {
     const { run_id } = req.params;

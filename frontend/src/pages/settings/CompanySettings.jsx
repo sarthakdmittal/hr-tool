@@ -1,10 +1,11 @@
-import { useEffect } from 'react';
-import { useQuery, useMutation } from '@tanstack/react-query';
+import { useEffect, useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import toast from 'react-hot-toast';
-import { Save, Building2, Shield, CreditCard, Globe } from 'lucide-react';
+import { Save, Building2, Shield, CreditCard, Globe, Layers, Briefcase, Plus, Trash2 } from 'lucide-react';
 import api from '../../api/client';
 import LoadingSpinner from '../../components/LoadingSpinner';
+import Modal from '../../components/Modal';
 
 function Section({ title, icon: Icon, children }) {
   return (
@@ -17,6 +18,200 @@ function Section({ title, icon: Icon, children }) {
       </div>
       {children}
     </div>
+  );
+}
+
+function DepartmentsSection() {
+  const queryClient = useQueryClient();
+  const [newName, setNewName] = useState('');
+  const [deleteTarget, setDeleteTarget] = useState(null);
+
+  const { data: departments = [], isLoading } = useQuery({
+    queryKey: ['departments'],
+    queryFn: () => api.get('/departments').then(r => r.data),
+  });
+
+  const createMutation = useMutation({
+    mutationFn: (name) => api.post('/departments', { name }),
+    onSuccess: () => {
+      toast.success('Department added');
+      setNewName('');
+      queryClient.invalidateQueries({ queryKey: ['departments'] });
+    },
+    onError: (err) => toast.error(err.response?.data?.error || 'Failed to add department'),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id) => api.delete(`/departments/${id}`),
+    onSuccess: () => {
+      toast.success('Department deleted');
+      setDeleteTarget(null);
+      queryClient.invalidateQueries({ queryKey: ['departments'] });
+    },
+    onError: (err) => toast.error(err.response?.data?.error || 'Failed to delete department'),
+  });
+
+  return (
+    <>
+      <div className="space-y-3">
+        <div className="flex gap-2">
+          <input
+            className="form-input flex-1"
+            placeholder="New department name"
+            value={newName}
+            onChange={(e) => setNewName(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); if (newName.trim()) createMutation.mutate(newName.trim()); } }}
+          />
+          <button
+            type="button"
+            className="btn-primary px-4"
+            disabled={!newName.trim() || createMutation.isPending}
+            onClick={() => createMutation.mutate(newName.trim())}
+          >
+            <Plus className="h-4 w-4" /> Add
+          </button>
+        </div>
+        {isLoading ? (
+          <LoadingSpinner className="py-4" />
+        ) : (
+          <div className="divide-y divide-gray-100 rounded-lg border border-gray-200 overflow-hidden">
+            {departments.length === 0 ? (
+              <p className="text-sm text-gray-400 text-center py-4">No departments yet</p>
+            ) : departments.map((dept) => (
+              <div key={dept.id} className="flex items-center justify-between px-4 py-2.5 bg-white hover:bg-gray-50">
+                <span className="text-sm text-gray-800">{dept.name}</span>
+                <button
+                  type="button"
+                  onClick={() => setDeleteTarget(dept)}
+                  className="text-red-500 hover:text-red-700 p-1 rounded transition"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <Modal
+        isOpen={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        title="Delete Department"
+        size="sm"
+        footer={
+          <>
+            <button className="btn-secondary" onClick={() => setDeleteTarget(null)}>Cancel</button>
+            <button
+              className="btn-danger"
+              onClick={() => deleteMutation.mutate(deleteTarget.id)}
+              disabled={deleteMutation.isPending}
+            >
+              <Trash2 className="h-4 w-4" /> Delete
+            </button>
+          </>
+        }
+      >
+        <p className="text-gray-700">Delete department <span className="font-semibold">{deleteTarget?.name}</span>?</p>
+        <p className="text-sm text-gray-500 mt-1">Employees assigned to this department will lose their department association.</p>
+      </Modal>
+    </>
+  );
+}
+
+function DesignationsSection() {
+  const queryClient = useQueryClient();
+  const [newName, setNewName] = useState('');
+  const [deleteTarget, setDeleteTarget] = useState(null);
+
+  const { data: designations = [], isLoading } = useQuery({
+    queryKey: ['designations'],
+    queryFn: () => api.get('/designations').then(r => r.data),
+  });
+
+  const createMutation = useMutation({
+    mutationFn: (name) => api.post('/designations', { name }),
+    onSuccess: () => {
+      toast.success('Designation added');
+      setNewName('');
+      queryClient.invalidateQueries({ queryKey: ['designations'] });
+    },
+    onError: (err) => toast.error(err.response?.data?.error || 'Failed to add designation'),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id) => api.delete(`/designations/${id}`),
+    onSuccess: () => {
+      toast.success('Designation deleted');
+      setDeleteTarget(null);
+      queryClient.invalidateQueries({ queryKey: ['designations'] });
+    },
+    onError: (err) => toast.error(err.response?.data?.error || 'Failed to delete designation'),
+  });
+
+  return (
+    <>
+      <div className="space-y-3">
+        <div className="flex gap-2">
+          <input
+            className="form-input flex-1"
+            placeholder="New designation name"
+            value={newName}
+            onChange={(e) => setNewName(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); if (newName.trim()) createMutation.mutate(newName.trim()); } }}
+          />
+          <button
+            type="button"
+            className="btn-primary px-4"
+            disabled={!newName.trim() || createMutation.isPending}
+            onClick={() => createMutation.mutate(newName.trim())}
+          >
+            <Plus className="h-4 w-4" /> Add
+          </button>
+        </div>
+        {isLoading ? (
+          <LoadingSpinner className="py-4" />
+        ) : (
+          <div className="divide-y divide-gray-100 rounded-lg border border-gray-200 overflow-hidden">
+            {designations.length === 0 ? (
+              <p className="text-sm text-gray-400 text-center py-4">No designations yet</p>
+            ) : designations.map((desig) => (
+              <div key={desig.id} className="flex items-center justify-between px-4 py-2.5 bg-white hover:bg-gray-50">
+                <span className="text-sm text-gray-800">{desig.name}</span>
+                <button
+                  type="button"
+                  onClick={() => setDeleteTarget(desig)}
+                  className="text-red-500 hover:text-red-700 p-1 rounded transition"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <Modal
+        isOpen={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        title="Delete Designation"
+        size="sm"
+        footer={
+          <>
+            <button className="btn-secondary" onClick={() => setDeleteTarget(null)}>Cancel</button>
+            <button
+              className="btn-danger"
+              onClick={() => deleteMutation.mutate(deleteTarget.id)}
+              disabled={deleteMutation.isPending}
+            >
+              <Trash2 className="h-4 w-4" /> Delete
+            </button>
+          </>
+        }
+      >
+        <p className="text-gray-700">Delete designation <span className="font-semibold">{deleteTarget?.name}</span>?</p>
+        <p className="text-sm text-gray-500 mt-1">Employees with this designation will lose their designation association.</p>
+      </Modal>
+    </>
   );
 }
 
@@ -214,5 +409,16 @@ export default function CompanySettings() {
         </div>
       </Section>
     </form>
+
+    {/* Departments & Designations — outside form to avoid submit conflicts */}
+    <div className="space-y-6 max-w-4xl">
+      <Section title="Departments" icon={Layers}>
+        <DepartmentsSection />
+      </Section>
+
+      <Section title="Designations" icon={Briefcase}>
+        <DesignationsSection />
+      </Section>
+    </div>
   );
 }

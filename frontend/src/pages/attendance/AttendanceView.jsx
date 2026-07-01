@@ -9,7 +9,7 @@ import {
   getDay,
   isWeekend,
 } from 'date-fns';
-import { Save, Users, Calendar, Check } from 'lucide-react';
+import { Save, Users, Calendar, Check, Trash2 } from 'lucide-react';
 import api from '../../api/client';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import Modal from '../../components/Modal';
@@ -209,6 +209,7 @@ export default function AttendanceView() {
   const [modified, setModified] = useState(new Set());
   const [openCellDate, setOpenCellDate] = useState(null);
   const [bulkModalOpen, setBulkModalOpen] = useState(false);
+  const [clearModalOpen, setClearModalOpen] = useState(false);
   const [bulkFrom, setBulkFrom] = useState('');
   const [bulkTo, setBulkTo] = useState('');
   const [bulkStatuses, setBulkStatuses] = useState(new Set(['P']));
@@ -259,6 +260,22 @@ export default function AttendanceView() {
     setAttendance(map);
     setModified(new Set());
   }, [attData]);
+
+  const clearMutation = useMutation({
+    mutationFn: () => api.delete('/attendance/clear', {
+      data: { employee_id: selectedEmployee, month: selectedMonth, year: selectedYear }
+    }),
+    onSuccess: () => {
+      toast.success('Attendance cleared');
+      setClearModalOpen(false);
+      setAttendance({});
+      setModified(new Set());
+      queryClient.invalidateQueries({ queryKey: ['attendance', selectedEmployee, selectedMonth, selectedYear] });
+    },
+    onError: (err) => {
+      toast.error(err.response?.data?.error || 'Failed to clear attendance');
+    },
+  });
 
   const bulkMutation = useMutation({
     mutationFn: (payload) => api.post('/attendance/bulk', payload),
@@ -379,6 +396,11 @@ export default function AttendanceView() {
           <button className="btn-secondary" onClick={() => setBulkModalOpen(true)}>
             <Calendar className="h-4 w-4" /> Bulk Mark
           </button>
+          {selectedEmployee && (
+            <button className="btn-danger" onClick={() => setClearModalOpen(true)}>
+              <Trash2 className="h-4 w-4" /> Clear Month
+            </button>
+          )}
         </div>
       </div>
 
@@ -500,6 +522,39 @@ export default function AttendanceView() {
           Save Attendance {modified.size > 0 && `(${modified.size})`}
         </button>
       </div>
+
+      {/* Clear Month Modal */}
+      <Modal
+        isOpen={clearModalOpen}
+        onClose={() => setClearModalOpen(false)}
+        title="Clear Attendance"
+        size="sm"
+        footer={
+          <>
+            <button className="btn-secondary" onClick={() => setClearModalOpen(false)}>Cancel</button>
+            <button
+              className="btn-danger"
+              onClick={() => clearMutation.mutate()}
+              disabled={clearMutation.isPending}
+            >
+              {clearMutation.isPending ? (
+                <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+              ) : (
+                <Trash2 className="h-4 w-4" />
+              )}
+              Clear
+            </button>
+          </>
+        }
+      >
+        <p className="text-gray-700">
+          Clear all attendance records for the selected employee for{' '}
+          <span className="font-semibold">
+            {new Date(selectedYear, selectedMonth - 1).toLocaleString('default', { month: 'long' })} {selectedYear}
+          </span>?
+        </p>
+        <p className="text-sm text-gray-500 mt-1">This will permanently delete all records for this month. This cannot be undone.</p>
+      </Modal>
 
       {/* Bulk Mark Modal */}
       <Modal

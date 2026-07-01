@@ -9,6 +9,7 @@ router.get('/runs', auth, payrollController.listRuns);
 router.get('/runs/:run_id', auth, payrollController.getRun);
 router.get('/runs/:run_id/items', auth, payrollController.getRunItems);
 router.put('/runs/:run_id/lock', auth, payrollController.lockRun);
+router.delete('/runs/:run_id', auth, payrollController.deleteRun);
 router.get('/slip/:payroll_item_id', auth, payrollController.getSlip);
 router.get('/slip/:payroll_item_id/pdf', auth, payrollController.getSlipPDF);
 router.get('/employee/:employee_id/slip', auth, payrollController.getEmployeeSlip);

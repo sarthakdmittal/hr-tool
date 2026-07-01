@@ -175,6 +175,31 @@ exports.getAttendanceReport = async (req, res) => {
   }
 };
 
+exports.clearAttendance = async (req, res) => {
+  try {
+    const company_id = req.user.company_id;
+    const { employee_id, month, year } = req.body;
+
+    if (!employee_id || !month || !year) {
+      return res.status(400).json({ error: 'employee_id, month, and year are required' });
+    }
+
+    const employee = await Employee.findOne({ where: { id: employee_id, company_id } });
+    if (!employee) return res.status(404).json({ error: 'Employee not found' });
+
+    const startDate = `${year}-${String(month).padStart(2, '0')}-01`;
+    const endDate = new Date(year, month, 0).toISOString().split('T')[0];
+
+    const deleted = await Attendance.destroy({
+      where: { employee_id, date: { [Op.between]: [startDate, endDate] } }
+    });
+
+    res.json({ message: `Cleared ${deleted} attendance records` });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
 exports.getEmployeeAttendanceSummary = async (req, res) => {
   try {
     const { employee_id } = req.params;
