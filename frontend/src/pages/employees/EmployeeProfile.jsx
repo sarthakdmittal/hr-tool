@@ -111,7 +111,6 @@ export default function EmployeeProfile() {
         })
         .then((r) => r.data.summary),
     enabled: activeTab === 'attendance' && Boolean(id),
-    staleTime: 30_000,
   });
 
   // Leave balances

@@ -285,6 +285,7 @@ export default function AttendanceView() {
       toast.success('Attendance saved successfully');
       setModified(new Set());
       queryClient.invalidateQueries({ queryKey: ['attendance', selectedEmployee, selectedMonth, selectedYear] });
+      queryClient.invalidateQueries({ queryKey: ['employee-attendance'] });
     },
     onError: (err) => {
       toast.error(err.response?.data?.message || err.response?.data?.error || 'Failed to save attendance');
