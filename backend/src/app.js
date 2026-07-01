@@ -117,6 +117,21 @@ async function runMigrations() {
     `ALTER TABLE leave_allocations ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()`,
     // Add 'cancelled' to the status ENUM if it was created before that value existed
     `ALTER TYPE "enum_leaves_status" ADD VALUE IF NOT EXISTS 'cancelled'`,
+    // Create resignation_letters table if not exists
+    `CREATE TABLE IF NOT EXISTS resignation_letters (
+      id SERIAL PRIMARY KEY,
+      company_id INTEGER NOT NULL,
+      employee_id INTEGER NOT NULL,
+      resignation_date DATE NOT NULL,
+      last_working_date DATE NOT NULL,
+      reason TEXT,
+      notice_period_waived BOOLEAN DEFAULT false,
+      status VARCHAR(20) DEFAULT 'submitted',
+      hr_notes TEXT,
+      generated_by INTEGER,
+      created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+      updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+    )`,
   ];
   for (const sql of stmts) {
     try { await sequelize.query(sql); } catch (_) { /* already applied */ }

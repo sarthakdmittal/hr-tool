@@ -62,7 +62,7 @@ exports.listOfferLetters = async (req, res) => {
     const company_id = req.user.company_id;
     const offerLetters = await OfferLetter.findAll({
       where: { company_id },
-      order: [['createdAt', 'DESC']]
+      order: [['created_at', 'DESC']]
     });
     res.json(offerLetters);
   } catch (err) {

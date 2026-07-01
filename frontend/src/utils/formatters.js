@@ -13,7 +13,7 @@ export const formatCurrency = (amount, compact = false) => {
   }).format(num);
 };
 
-export const formatDate = (date, fmt = 'dd MMM yyyy') => {
+export const formatDate = (date, fmt = 'dd/MM/yyyy') => {
   if (!date) return '—';
   try {
     const d = typeof date === 'string' ? parseISO(date) : date;

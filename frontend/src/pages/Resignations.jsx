@@ -18,7 +18,7 @@ export default function Resignations() {
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [downloadingId, setDownloadingId] = useState(null);
 
-  const { data: resignations = [], isLoading } = useQuery({
+  const { data: resignations = [], isLoading, isError, error } = useQuery({
     queryKey: ['resignations'],
     queryFn: () => api.get('/resignations').then(r => r.data),
   });
@@ -159,6 +159,11 @@ export default function Resignations() {
         </button>
       </div>
 
+      {isError && (
+        <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-sm text-red-700">
+          Failed to load resignations: {error?.response?.data?.error || error?.message}
+        </div>
+      )}
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
         <Table
           columns={columns}
