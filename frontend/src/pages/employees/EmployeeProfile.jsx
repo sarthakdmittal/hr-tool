@@ -370,11 +370,13 @@ export default function EmployeeProfile() {
                     </thead>
                     <tbody className="divide-y divide-gray-100">
                       {salarySlips.map((slip) => {
+                        const run = slip.PayrollRun || {};
+                        const month = run.month || slip.month;
+                        const year = run.year || slip.year;
+                        const slipStatus = run.status || slip.status;
                         const monthLabel = (() => {
-                          if (slip.month_year) return slip.month_year;
-                          if (slip.month && slip.year) {
-                            const d = new Date(slip.year, (slip.month || 1) - 1, 1);
-                            return d.toLocaleDateString('en-IN', { month: 'long', year: 'numeric' });
+                          if (month && year) {
+                            return new Date(year, month - 1, 1).toLocaleDateString('en-IN', { month: 'long', year: 'numeric' });
                           }
                           return '—';
                         })();
@@ -384,7 +386,7 @@ export default function EmployeeProfile() {
                             <td className="px-4 py-3.5 text-sm text-gray-700">{formatCurrency(slip.gross_pay)}</td>
                             <td className="px-4 py-3.5 text-sm text-gray-700">{formatCurrency(slip.net_pay)}</td>
                             <td className="px-4 py-3.5">
-                              <Badge status={slip.status} label={slip.status} />
+                              <Badge status={slipStatus} label={slipStatus} />
                             </td>
                             <td className="px-4 py-3.5">
                               <button

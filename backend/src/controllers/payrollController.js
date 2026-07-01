@@ -355,6 +355,9 @@ exports.getSlipPDF = async (req, res) => {
     });
 
     if (!item) return res.status(404).json({ error: 'Payslip not found' });
+    if (req.user.role === 'employee' && item.employee_id !== req.user.employee_id) {
+      return res.status(403).json({ error: 'Access denied' });
+    }
 
     const company = await Company.findByPk(company_id);
     const payrollRun = item.PayrollRun;
