@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useParams, useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { Download, Edit, ArrowLeft, User, Briefcase, CreditCard, MapPin, UserPlus } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -71,8 +71,16 @@ function SummaryCard({ label, value, color = 'blue' }) {
 export default function EmployeeProfile() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const hrMode = isHR();
-  const [activeTab, setActiveTab] = useState('overview');
+  const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'overview');
+
+  useEffect(() => {
+    const tab = searchParams.get('tab');
+    if (tab && PROFILE_TABS.some(t => t.id === tab)) {
+      setActiveTab(tab);
+    }
+  }, [searchParams]);
   const [attendanceMonth, setAttendanceMonth] = useState(getCurrentMonth());
   const [attendanceYear, setAttendanceYear] = useState(getCurrentYear());
   const [downloadingSlipId, setDownloadingSlipId] = useState(null);
@@ -383,8 +391,8 @@ export default function EmployeeProfile() {
                         return (
                           <tr key={slip.id} className="hover:bg-gray-50 transition-colors">
                             <td className="px-4 py-3.5 text-sm text-gray-900 font-medium">{monthLabel}</td>
-                            <td className="px-4 py-3.5 text-sm text-gray-700">{formatCurrency(slip.gross_pay)}</td>
-                            <td className="px-4 py-3.5 text-sm text-gray-700">{formatCurrency(slip.net_pay)}</td>
+                            <td className="px-4 py-3.5 text-sm text-gray-700">{formatCurrency(slip.gross_salary)}</td>
+                            <td className="px-4 py-3.5 text-sm text-gray-700">{formatCurrency(slip.net_salary)}</td>
                             <td className="px-4 py-3.5">
                               <Badge status={slipStatus} label={slipStatus} />
                             </td>

@@ -16,6 +16,7 @@ import {
   User,
   UserCheck,
   LogOut,
+  Banknote,
 } from 'lucide-react';
 import { isHR, getEmployeeId } from '../store/authStore';
 
@@ -27,6 +28,7 @@ const getNavSections = () => {
         label: 'My',
         items: [
           { path: empId ? `/employees/${empId}` : '/', label: 'My Profile', icon: User, end: true },
+          { path: empId ? `/employees/${empId}?tab=salary-slips` : '/', label: 'My Salary Slips', icon: Banknote },
           { path: '/attendance', label: 'Attendance', icon: CalendarCheck },
           { path: '/leaves', label: 'My Leaves', icon: CalendarDays },
           { path: '/resignations', label: 'Resignation', icon: LogOut },
