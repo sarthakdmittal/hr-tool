@@ -17,6 +17,7 @@ const PayrollRun = require('./PayrollRun');
 const PayrollItem = require('./PayrollItem');
 const TaxDeclaration = require('./TaxDeclaration');
 const OfferLetter = require('./OfferLetter');
+const ResignationLetter = require('./ResignationLetter');
 
 // Associations
 Company.hasMany(Department, { foreignKey: 'company_id' });
@@ -62,8 +63,11 @@ PayrollItem.belongsTo(Employee, { foreignKey: 'employee_id', include: [Departmen
 Employee.hasMany(TaxDeclaration, { foreignKey: 'employee_id' });
 TaxDeclaration.belongsTo(Employee, { foreignKey: 'employee_id' });
 
+Employee.hasMany(ResignationLetter, { foreignKey: 'employee_id' });
+ResignationLetter.belongsTo(Employee, { foreignKey: 'employee_id' });
+
 module.exports = {
   sequelize, User, Company, Department, Designation, Employee,
   SalaryStructure, SalaryComponent, Attendance, LeaveType, Leave, LeaveAllocation,
-  Holiday, PayrollRun, PayrollItem, TaxDeclaration, OfferLetter
+  Holiday, PayrollRun, PayrollItem, TaxDeclaration, OfferLetter, ResignationLetter
 };

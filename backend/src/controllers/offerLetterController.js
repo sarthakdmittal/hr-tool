@@ -42,6 +42,21 @@ exports.generateOfferLetter = async (req, res) => {
   }
 };
 
+exports.deleteOfferLetter = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const company_id = req.user.company_id;
+
+    const offerLetter = await OfferLetter.findOne({ where: { id, company_id } });
+    if (!offerLetter) return res.status(404).json({ error: 'Offer letter not found' });
+
+    await offerLetter.destroy();
+    res.json({ message: 'Offer letter deleted' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
 exports.listOfferLetters = async (req, res) => {
   try {
     const company_id = req.user.company_id;

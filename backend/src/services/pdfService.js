@@ -460,7 +460,93 @@ async function generateOfferLetter(offerData, employee, company) {
   });
 }
 
+async function generateResignationLetter(resignData, employee, company) {
+  return new Promise((resolve, reject) => {
+    const doc = new PDFDocument({ size: 'A4', margin: 60 });
+    const buffers = [];
+
+    doc.on('data', chunk => buffers.push(chunk));
+    doc.on('end', () => resolve(Buffer.concat(buffers)));
+    doc.on('error', reject);
+
+    const pageWidth = doc.page.width - 120;
+    const leftMargin = 60;
+
+    const fmt = (dateStr) => dateStr
+      ? new Date(dateStr).toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' })
+      : '—';
+
+    // Letterhead
+    doc.fontSize(20).font('Helvetica-Bold').text(company.name || 'Company Name', leftMargin, 50, { align: 'center', width: pageWidth });
+    doc.moveDown(0.2);
+    if (company.address) doc.fontSize(9).font('Helvetica').text(company.address, leftMargin, doc.y, { align: 'center', width: pageWidth });
+    doc.moveDown(0.5);
+    doc.moveTo(leftMargin, doc.y).lineTo(leftMargin + pageWidth, doc.y).stroke('#333333');
+    doc.moveDown(1.5);
+
+    // Date
+    doc.fontSize(10).font('Helvetica').text(`Date: ${fmt(resignData.resignation_date)}`, leftMargin, doc.y, { align: 'right', width: pageWidth });
+    doc.moveDown(1);
+
+    // To
+    doc.fontSize(10).font('Helvetica-Bold').text('To,', leftMargin);
+    doc.font('Helvetica').text('The HR Manager', leftMargin);
+    doc.text(company.name || 'Company Name', leftMargin);
+    doc.moveDown(1.5);
+
+    // Subject
+    doc.fontSize(11).font('Helvetica-Bold').text('Subject: Resignation Letter', leftMargin);
+    doc.moveDown(1);
+
+    // Salutation
+    doc.fontSize(10).font('Helvetica').text('Dear Sir/Madam,', leftMargin);
+    doc.moveDown(0.8);
+
+    // Body
+    const empName = `${employee.first_name} ${employee.last_name}`;
+    const desig = employee.Designation?.name || resignData.designation || 'my current position';
+    const dept = employee.Department?.name || resignData.department || 'the department';
+
+    doc.text(
+      `I, ${empName} (Employee ID: ${employee.emp_id}), am writing to formally notify you of my resignation from the position of ${desig} in the ${dept} department, effective ${fmt(resignData.last_working_date)}.`,
+      leftMargin, doc.y, { width: pageWidth, align: 'justify' }
+    );
+    doc.moveDown(0.8);
+
+    if (resignData.reason) {
+      doc.text(resignData.reason, leftMargin, doc.y, { width: pageWidth, align: 'justify' });
+      doc.moveDown(0.8);
+    }
+
+    doc.text(
+      `My last working day will be ${fmt(resignData.last_working_date)}.${resignData.notice_period_waived ? ' I request that the notice period be waived.' : ''}`,
+      leftMargin, doc.y, { width: pageWidth }
+    );
+    doc.moveDown(0.8);
+
+    doc.text(
+      'I am grateful for the opportunities provided during my tenure and will ensure a smooth handover of my responsibilities before my last working day.',
+      leftMargin, doc.y, { width: pageWidth, align: 'justify' }
+    );
+    doc.moveDown(0.8);
+
+    doc.text('Thank you for your understanding and support.', leftMargin);
+    doc.moveDown(2);
+
+    // Signature
+    doc.text('Yours sincerely,', leftMargin);
+    doc.moveDown(2);
+    doc.font('Helvetica-Bold').text(empName, leftMargin);
+    doc.font('Helvetica').text(desig, leftMargin);
+    doc.text(`Employee ID: ${employee.emp_id}`, leftMargin);
+    if (employee.email) doc.text(employee.email, leftMargin);
+
+    doc.end();
+  });
+}
+
 module.exports = {
   generateSalarySlip,
-  generateOfferLetter
+  generateOfferLetter,
+  generateResignationLetter
 };

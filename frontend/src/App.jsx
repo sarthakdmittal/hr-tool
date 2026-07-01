@@ -20,6 +20,8 @@ import PFReport from './pages/reports/PFReport';
 import TDSReport from './pages/reports/TDSReport';
 import ESICReport from './pages/reports/ESICReport';
 import CompanySettings from './pages/settings/CompanySettings';
+import OfferLetters from './pages/OfferLetters';
+import Resignations from './pages/Resignations';
 
 function RequireAuth({ children }) {
   return isAuthenticated() ? children : <Navigate to="/login" replace />;
@@ -85,6 +87,10 @@ export default function App() {
         <Route path="/reports/pf" element={<ErrorBoundary><PFReport /></ErrorBoundary>} />
         <Route path="/reports/tds" element={<ErrorBoundary><TDSReport /></ErrorBoundary>} />
         <Route path="/reports/esic" element={<ErrorBoundary><ESICReport /></ErrorBoundary>} />
+
+        {/* Documents */}
+        <Route path="/offer-letters" element={<OfferLetters />} />
+        <Route path="/resignations" element={<Resignations />} />
 
         {/* Settings */}
         <Route path="/settings" element={<CompanySettings />} />

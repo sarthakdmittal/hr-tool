@@ -13,6 +13,8 @@ import {
   Settings,
   ChevronRight,
   Building2,
+  FilePlus,
+  UserMinus,
 } from 'lucide-react';
 
 const navSections = [
@@ -35,6 +37,13 @@ const navSections = [
     items: [
       { path: '/salary-structures', label: 'Salary Structures', icon: DollarSign },
       { path: '/payroll', label: 'Payroll', icon: CreditCard },
+    ],
+  },
+  {
+    label: 'Documents',
+    items: [
+      { path: '/offer-letters', label: 'Offer Letters', icon: FilePlus },
+      { path: '/resignations', label: 'Resignations', icon: UserMinus },
     ],
   },
   {

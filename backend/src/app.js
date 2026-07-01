@@ -51,6 +51,7 @@ app.use('/api/salary-structures',require('./routes/salaryStructures'));
 app.use('/api/payroll',          require('./routes/payroll'));
 app.use('/api/reports',          require('./routes/reports'));
 app.use('/api/offer-letters',    require('./routes/offerLetters'));
+app.use('/api/resignations',     require('./routes/resignations'));
 app.use('/api/tax-declarations', require('./routes/taxDeclarations'));
 
 app.get('/api/health', (req, res) => res.json({ status: 'ok', ts: Date.now() }));
