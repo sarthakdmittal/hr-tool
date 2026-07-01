@@ -1,6 +1,6 @@
 import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { useEffect } from 'react';
-import { isAuthenticated } from './store/authStore';
+import { isAuthenticated, isHR, getEmployeeId } from './store/authStore';
 import Layout from './components/Layout';
 import ErrorBoundary from './components/ErrorBoundary';
 import Login from './pages/Login';
@@ -59,7 +59,9 @@ export default function App() {
           </RequireAuth>
         }
       >
-        <Route path="/" element={<Dashboard />} />
+        <Route path="/" element={
+          isHR() ? <Dashboard /> : <Navigate to={`/employees/${getEmployeeId()}`} replace />
+        } />
 
         {/* Employees */}
         <Route path="/employees" element={<EmployeeList />} />

@@ -117,7 +117,7 @@ export default function EmployeeProfile() {
   // Leave balances
   const { data: leaveBalances, isLoading: leavesLoading } = useQuery({
     queryKey: ['employee-leave-balances', id],
-    queryFn: () => api.get(`/employees/${id}/leave-balances`).then((r) => r.data),
+    queryFn: () => api.get(`/leaves/balance/${id}`).then((r) => r.data.balances || []),
     enabled: activeTab === 'leave-balance' && Boolean(id),
     staleTime: 60_000,
   });
