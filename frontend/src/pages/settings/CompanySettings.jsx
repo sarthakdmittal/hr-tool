@@ -236,6 +236,7 @@ export default function CompanySettings() {
   if (isLoading) return <LoadingSpinner className="py-20" />;
 
   return (
+    <>
     <form onSubmit={handleSubmit(data => mutation.mutate(data))} className="space-y-6 max-w-4xl">
       <div className="flex items-center justify-between">
         <div>
@@ -420,5 +421,6 @@ export default function CompanySettings() {
         <DesignationsSection />
       </Section>
     </div>
+    </>
   );
 }
