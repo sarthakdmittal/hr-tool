@@ -222,6 +222,10 @@ export default function OfferLetters() {
             <input type="date" {...register('valid_till')} className="form-input" />
           </div>
           <div>
+            <label className="form-label">Location</label>
+            <input {...register('location')} className="form-input" placeholder="City / Office location" />
+          </div>
+          <div>
             <label className="form-label">Reporting Manager</label>
             <input {...register('reporting_manager')} className="form-input" placeholder="Manager Name" />
           </div>

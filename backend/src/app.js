@@ -117,6 +117,7 @@ async function runMigrations() {
     `ALTER TABLE leave_allocations ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()`,
     // Add 'cancelled' to the status ENUM if it was created before that value existed
     `ALTER TYPE "enum_leaves_status" ADD VALUE IF NOT EXISTS 'cancelled'`,
+    `ALTER TABLE offer_letters ADD COLUMN IF NOT EXISTS location VARCHAR(255)`,
     // Create resignation_letters table if not exists
     `CREATE TABLE IF NOT EXISTS resignation_letters (
       id SERIAL PRIMARY KEY,

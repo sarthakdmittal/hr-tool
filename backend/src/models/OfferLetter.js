@@ -36,6 +36,10 @@ const OfferLetter = sequelize.define('OfferLetter', {
     type: DataTypes.STRING(255),
     allowNull: false
   },
+  location: {
+    type: DataTypes.STRING(255),
+    allowNull: true
+  },
   joining_date: {
     type: DataTypes.DATEONLY,
     allowNull: false

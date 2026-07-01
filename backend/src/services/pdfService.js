@@ -329,7 +329,7 @@ async function generateOfferLetter(offerData, employee, company) {
 
     drawDetail('Role', offerData.designation);
     drawDetail('Department', offerData.department);
-    drawDetail('Location', company.city || company.address || '-');
+    drawDetail('Location', offerData.location || company.city || '-');
     drawDetail('Reporting To', offerData.reporting_manager || '-');
     drawDetail('Date of Joining', joiningDate);
     drawDetail('Probation Period', `${offerData.probation_period || 6} months`);
@@ -436,14 +436,19 @@ async function generateOfferLetter(offerData, employee, company) {
 
     // ============ SIGNATURE BLOCK ============
     doc.fontSize(10).font('Helvetica').text('Yours sincerely,', leftMargin, doc.y);
-    doc.moveDown(2.5);
-    doc.moveTo(leftMargin, doc.y).lineTo(leftMargin + 150, doc.y).stroke('#333333');
-    doc.moveDown(0.2);
+    doc.moveDown(1.8);
+    const companySigY = doc.y;
+    doc.moveTo(leftMargin, companySigY).lineTo(leftMargin + 150, companySigY).stroke('#333333');
+    doc.moveDown(0.3);
     doc.fontSize(10).font('Helvetica-Bold').text('Authorized Signatory', leftMargin, doc.y);
     doc.fontSize(9).font('Helvetica').text(company.name || '', leftMargin, doc.y);
-    doc.moveDown(1.5);
+    doc.moveDown(1);
 
     // ============ ACCEPTANCE SECTION ============
+    // Ensure acceptance block stays together — add page break if less than 120pt remaining
+    const remainingSpace = doc.page.height - doc.page.margins.bottom - doc.y;
+    if (remainingSpace < 120) doc.addPage();
+
     doc.moveTo(leftMargin, doc.y).lineTo(leftMargin + pageWidth, doc.y).stroke('#cccccc');
     doc.moveDown(0.5);
     doc.fontSize(11).font('Helvetica-Bold').text('ACCEPTANCE', leftMargin, doc.y, { align: 'center', width: pageWidth });
@@ -453,16 +458,15 @@ async function generateOfferLetter(offerData, employee, company) {
       `on the terms and conditions stated above.`,
       leftMargin, doc.y, { width: pageWidth }
     );
-    doc.moveDown(2);
+    doc.moveDown(1.8);
 
     const sigY = doc.y;
     doc.moveTo(leftMargin, sigY).lineTo(leftMargin + 200, sigY).stroke('#333333');
     doc.moveTo(leftMargin + pageWidth - 160, sigY).lineTo(leftMargin + pageWidth, sigY).stroke('#333333');
-
     doc.moveDown(0.3);
     doc.fontSize(9).font('Helvetica');
     doc.text('Signature of Candidate', leftMargin, doc.y, { width: 200 });
-    doc.text('Date of Acceptance', leftMargin + pageWidth - 160, sigY + 5, { width: 160, align: 'right' });
+    doc.text('Date of Acceptance', leftMargin + pageWidth - 160, doc.y - doc.currentLineHeight(), { width: 160, align: 'right' });
 
     doc.end();
   });

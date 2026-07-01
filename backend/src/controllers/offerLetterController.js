@@ -6,7 +6,7 @@ exports.generateOfferLetter = async (req, res) => {
     const company_id = req.user.company_id;
     const {
       employee_id, candidate_name, candidate_email, candidate_address,
-      designation, department, joining_date, ctc, reporting_manager,
+      designation, department, location, joining_date, ctc, reporting_manager,
       probation_period, notice_period, ctc_breakup, additional_terms,
       offer_date, valid_till
     } = req.body;
@@ -23,6 +23,7 @@ exports.generateOfferLetter = async (req, res) => {
       candidate_address,
       designation,
       department,
+      location: location || null,
       joining_date,
       ctc,
       reporting_manager,
