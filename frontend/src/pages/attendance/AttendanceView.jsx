@@ -10,6 +10,7 @@ import {
   isWeekend,
 } from 'date-fns';
 import { Save, Users, Calendar, Check, Trash2 } from 'lucide-react';
+import { isHR, getEmployeeId } from '../../store/authStore';
 import api from '../../api/client';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import Modal from '../../components/Modal';
@@ -203,7 +204,8 @@ export default function AttendanceView() {
   const queryClient = useQueryClient();
   const [selectedMonth, setSelectedMonth] = useState(getCurrentMonth());
   const [selectedYear, setSelectedYear] = useState(getCurrentYear());
-  const [selectedEmployee, setSelectedEmployee] = useState('');
+  const hrMode = isHR();
+  const [selectedEmployee, setSelectedEmployee] = useState(() => (!isHR() && getEmployeeId()) ? String(getEmployeeId()) : '');
   // attendance: { 'yyyy-MM-dd': ['P', 'OT'] }  (arrays internally)
   const [attendance, setAttendance] = useState({});
   const [modified, setModified] = useState(new Set());
@@ -384,15 +386,17 @@ export default function AttendanceView() {
               {yearOptions.map((y) => <option key={y.value} value={y.value}>{y.label}</option>)}
             </select>
           </div>
-          <div className="flex-1 min-w-[200px]">
-            <label className="form-label">Employee</label>
-            <select className="form-select" value={selectedEmployee} onChange={handleEmployeeChange}>
-              <option value="">-- Select Employee --</option>
-              {employees.map((emp) => (
-                <option key={emp.id} value={emp.id}>{emp.first_name} {emp.last_name} ({emp.emp_id})</option>
-              ))}
-            </select>
-          </div>
+          {hrMode && (
+            <div className="flex-1 min-w-[200px]">
+              <label className="form-label">Employee</label>
+              <select className="form-select" value={selectedEmployee} onChange={handleEmployeeChange}>
+                <option value="">-- Select Employee --</option>
+                {employees.map((emp) => (
+                  <option key={emp.id} value={emp.id}>{emp.first_name} {emp.last_name} ({emp.emp_id})</option>
+                ))}
+              </select>
+            </div>
+          )}
           <button className="btn-secondary" onClick={() => setBulkModalOpen(true)}>
             <Calendar className="h-4 w-4" /> Bulk Mark
           </button>

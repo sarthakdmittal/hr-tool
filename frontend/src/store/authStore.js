@@ -8,6 +8,10 @@ export const getUser = () => {
     return null;
   }
 };
+export const getRole = () => getUser()?.role || null;
+export const getEmployeeId = () => getUser()?.employee_id || null;
+export const isHR = () => ['hr_admin', 'manager'].includes(getRole());
+export const isEmployee = () => getRole() === 'employee';
 export const setAuth = (token, user) => {
   localStorage.setItem('token', token);
   localStorage.setItem('user', JSON.stringify(user));

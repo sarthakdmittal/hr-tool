@@ -86,7 +86,12 @@ exports.listAttendance = async (req, res) => {
     const { employee_id, month, year, date } = req.query;
 
     const employeeWhere = { company_id };
-    if (employee_id) employeeWhere.id = employee_id;
+    // Employees can only see their own attendance
+    if (req.user.role === 'employee') {
+      employeeWhere.id = req.user.employee_id;
+    } else if (employee_id) {
+      employeeWhere.id = employee_id;
+    }
 
     const attendanceWhere = {};
     if (date) {

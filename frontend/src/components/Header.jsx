@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Menu, Bell, ChevronDown, LogOut, User, PanelLeft } from 'lucide-react';
-import { getUser, clearAuth } from '../store/authStore';
+import { getUser, clearAuth, isHR, getEmployeeId } from '../store/authStore';
 import { useNavigate } from 'react-router-dom';
 
 export default function Header({ onToggleSidebar }) {
@@ -54,7 +54,13 @@ export default function Header({ onToggleSidebar }) {
                   <p className="text-xs text-gray-500">{user?.email || ''}</p>
                 </div>
                 <button
-                  onClick={() => { setDropdownOpen(false); }}
+                  onClick={() => {
+                    setDropdownOpen(false);
+                    const empId = getEmployeeId();
+                    if (empId) {
+                      navigate(`/employees/${empId}`);
+                    }
+                  }}
                   className="w-full flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
                 >
                   <User className="h-4 w-4" />

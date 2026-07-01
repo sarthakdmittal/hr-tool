@@ -6,63 +6,82 @@ import {
   CalendarDays,
   DollarSign,
   CreditCard,
-  BarChart3,
   FileText,
   Receipt,
   Shield,
   Settings,
-  ChevronRight,
   Building2,
   FilePlus,
   UserMinus,
+  User,
+  UserCheck,
 } from 'lucide-react';
+import { isHR, getEmployeeId } from '../store/authStore';
 
-const navSections = [
-  {
-    label: 'Main',
-    items: [
-      { path: '/', label: 'Dashboard', icon: LayoutDashboard, end: true },
-    ],
-  },
-  {
-    label: 'People',
-    items: [
-      { path: '/employees', label: 'Employees', icon: Users },
-      { path: '/attendance', label: 'Attendance', icon: CalendarCheck },
-      { path: '/leaves', label: 'Leave Management', icon: CalendarDays },
-    ],
-  },
-  {
-    label: 'Payroll',
-    items: [
-      { path: '/salary-structures', label: 'Salary Structures', icon: DollarSign },
-      { path: '/payroll', label: 'Payroll', icon: CreditCard },
-    ],
-  },
-  {
-    label: 'Documents',
-    items: [
-      { path: '/offer-letters', label: 'Offer Letters', icon: FilePlus },
-      { path: '/resignations', label: 'Resignations', icon: UserMinus },
-    ],
-  },
-  {
-    label: 'Reports',
-    items: [
-      { path: '/reports/pf', label: 'PF Report', icon: Shield },
-      { path: '/reports/tds', label: 'TDS Report', icon: FileText },
-      { path: '/reports/esic', label: 'ESIC Report', icon: Receipt },
-    ],
-  },
-  {
-    label: 'Settings',
-    items: [
-      { path: '/settings', label: 'Company Settings', icon: Settings },
-    ],
-  },
-];
+const getNavSections = () => {
+  if (!isHR()) {
+    const empId = getEmployeeId();
+    return [
+      {
+        label: 'My',
+        items: [
+          { path: empId ? `/employees/${empId}` : '/', label: 'My Profile', icon: User, end: true },
+          { path: '/attendance', label: 'Attendance', icon: CalendarCheck },
+          { path: '/leaves', label: 'My Leaves', icon: CalendarDays },
+        ],
+      },
+    ];
+  }
+  return [
+    {
+      label: 'Main',
+      items: [
+        { path: '/', label: 'Dashboard', icon: LayoutDashboard, end: true },
+      ],
+    },
+    {
+      label: 'People',
+      items: [
+        { path: '/employees', label: 'Employees', icon: Users },
+        { path: '/attendance', label: 'Attendance', icon: CalendarCheck },
+        { path: '/leaves', label: 'Leave Management', icon: CalendarDays },
+        { path: '/account-requests', label: 'Account Requests', icon: UserCheck },
+      ],
+    },
+    {
+      label: 'Payroll',
+      items: [
+        { path: '/salary-structures', label: 'Salary Structures', icon: DollarSign },
+        { path: '/payroll', label: 'Payroll', icon: CreditCard },
+      ],
+    },
+    {
+      label: 'Documents',
+      items: [
+        { path: '/offer-letters', label: 'Offer Letters', icon: FilePlus },
+        { path: '/resignations', label: 'Resignations', icon: UserMinus },
+      ],
+    },
+    {
+      label: 'Reports',
+      items: [
+        { path: '/reports/pf', label: 'PF Report', icon: Shield },
+        { path: '/reports/tds', label: 'TDS Report', icon: FileText },
+        { path: '/reports/esic', label: 'ESIC Report', icon: Receipt },
+      ],
+    },
+    {
+      label: 'Settings',
+      items: [
+        { path: '/settings', label: 'Company Settings', icon: Settings },
+      ],
+    },
+  ];
+};
 
 export default function Sidebar({ collapsed = false }) {
+  const navSections = getNavSections();
+
   return (
     <aside className={`flex flex-col h-full bg-gray-900 transition-all duration-300 ${collapsed ? 'w-16' : 'w-64'}`}>
       {/* Logo */}

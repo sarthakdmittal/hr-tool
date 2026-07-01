@@ -185,7 +185,12 @@ exports.listLeaves = async (req, res) => {
     const { employee_id, status, month, year } = req.query;
 
     const employeeWhere = { company_id };
-    if (employee_id) employeeWhere.id = employee_id;
+    // Employees can only see their own leaves
+    if (req.user.role === 'employee') {
+      employeeWhere.id = req.user.employee_id;
+    } else if (employee_id) {
+      employeeWhere.id = employee_id;
+    }
 
     const leaveWhere = {};
     if (status) leaveWhere.status = status;

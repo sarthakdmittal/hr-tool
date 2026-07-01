@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
-import { Download, Edit, ArrowLeft, User, Briefcase, CreditCard, MapPin } from 'lucide-react';
+import { useQuery, useMutation } from '@tanstack/react-query';
+import { Download, Edit, ArrowLeft, User, Briefcase, CreditCard, MapPin, UserPlus } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../../api/client';
 import Badge from '../../components/Badge';
+import Modal from '../../components/Modal';
 import LoadingSpinner from '../../components/LoadingSpinner';
+import { isHR } from '../../store/authStore';
 import {
   formatDate,
   formatCurrency,
@@ -69,10 +71,13 @@ function SummaryCard({ label, value, color = 'blue' }) {
 export default function EmployeeProfile() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const hrMode = isHR();
   const [activeTab, setActiveTab] = useState('overview');
   const [attendanceMonth, setAttendanceMonth] = useState(getCurrentMonth());
   const [attendanceYear, setAttendanceYear] = useState(getCurrentYear());
   const [downloadingSlipId, setDownloadingSlipId] = useState(null);
+  const [createAccountModal, setCreateAccountModal] = useState(false);
+  const [accountForm, setAccountForm] = useState({ name: '', email: '', password: '' });
 
   const monthOptions = getMonthOptions();
   const yearOptions = getYearOptions(3);
@@ -115,6 +120,16 @@ export default function EmployeeProfile() {
     queryFn: () => api.get(`/employees/${id}/leave-balances`).then((r) => r.data),
     enabled: activeTab === 'leave-balance' && Boolean(id),
     staleTime: 60_000,
+  });
+
+  const createAccountMutation = useMutation({
+    mutationFn: (data) => api.post('/auth/create-employee-user', data),
+    onSuccess: () => {
+      toast.success('Employee account created');
+      setCreateAccountModal(false);
+      setAccountForm({ name: '', email: '', password: '' });
+    },
+    onError: (e) => toast.error(e.response?.data?.error || 'Failed to create account'),
   });
 
   const handleDownloadSlip = async (slipId) => {
@@ -169,12 +184,14 @@ export default function EmployeeProfile() {
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
         <div className="flex items-start justify-between gap-4 flex-wrap">
           <div className="flex items-center gap-4">
-            <button
-              onClick={() => navigate('/employees')}
-              className="p-2 rounded-lg hover:bg-gray-100 text-gray-500 hover:text-gray-700 transition flex-shrink-0"
-            >
-              <ArrowLeft className="h-5 w-5" />
-            </button>
+            {hrMode && (
+              <button
+                onClick={() => navigate('/employees')}
+                className="p-2 rounded-lg hover:bg-gray-100 text-gray-500 hover:text-gray-700 transition flex-shrink-0"
+              >
+                <ArrowLeft className="h-5 w-5" />
+              </button>
+            )}
             <div className="w-14 h-14 rounded-full bg-primary-100 flex items-center justify-center flex-shrink-0">
               <span className="text-xl font-bold text-primary-700">
                 {employee.first_name?.[0]?.toUpperCase()}{employee.last_name?.[0]?.toUpperCase()}
@@ -203,13 +220,27 @@ export default function EmployeeProfile() {
               </div>
             </div>
           </div>
-          <Link
-            to={`/employees/${id}/edit`}
-            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 border border-gray-300 hover:border-primary-400 hover:text-primary-600 rounded-lg transition"
-          >
-            <Edit className="h-4 w-4" />
-            Edit
-          </Link>
+          {hrMode && (
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => {
+                  setAccountForm({ name: `${employee.first_name} ${employee.last_name}`, email: employee.email || '', password: '' });
+                  setCreateAccountModal(true);
+                }}
+                className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 border border-gray-300 hover:border-green-400 hover:text-green-600 rounded-lg transition"
+              >
+                <UserPlus className="h-4 w-4" />
+                Create Account
+              </button>
+              <Link
+                to={`/employees/${id}/edit`}
+                className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 border border-gray-300 hover:border-primary-400 hover:text-primary-600 rounded-lg transition"
+              >
+                <Edit className="h-4 w-4" />
+                Edit
+              </Link>
+            </div>
+          )}
         </div>
       </div>
 
@@ -479,6 +510,37 @@ export default function EmployeeProfile() {
           )}
         </div>
       </div>
+
+      {/* Create Account Modal */}
+      <Modal isOpen={createAccountModal} onClose={() => setCreateAccountModal(false)} title="Create Employee Account" size="sm">
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            createAccountMutation.mutate({ employee_id: parseInt(id), ...accountForm });
+          }}
+          className="space-y-4"
+        >
+          <p className="text-sm text-gray-500">Create a login account for <strong>{employee?.first_name} {employee?.last_name}</strong> so they can access the app.</p>
+          <div>
+            <label className="form-label">Display Name *</label>
+            <input className="form-input" value={accountForm.name} onChange={e => setAccountForm(f => ({ ...f, name: e.target.value }))} required />
+          </div>
+          <div>
+            <label className="form-label">Email *</label>
+            <input type="email" className="form-input" value={accountForm.email} onChange={e => setAccountForm(f => ({ ...f, email: e.target.value }))} required />
+          </div>
+          <div>
+            <label className="form-label">Password *</label>
+            <input type="password" className="form-input" placeholder="Min 6 characters" minLength={6} value={accountForm.password} onChange={e => setAccountForm(f => ({ ...f, password: e.target.value }))} required />
+          </div>
+          <div className="flex gap-2 pt-1">
+            <button type="button" onClick={() => setCreateAccountModal(false)} className="btn-secondary flex-1">Cancel</button>
+            <button type="submit" disabled={createAccountMutation.isPending} className="btn-primary flex-1 justify-center">
+              {createAccountMutation.isPending ? 'Creating…' : 'Create Account'}
+            </button>
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 }

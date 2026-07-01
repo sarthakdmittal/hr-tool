@@ -11,12 +11,14 @@ import Badge from '../../components/Badge';
 import Modal from '../../components/Modal';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import { formatDate, getCurrentYear, getYearOptions } from '../../utils/formatters';
+import { isHR, getEmployeeId } from '../../store/authStore';
 
-const TABS = ['Requests', 'Allocations', 'Leave Types'];
+const HR_TABS = ['Requests', 'Allocations', 'Leave Types'];
+const EMPLOYEE_TABS = ['Requests'];
 
 // ─── Leave Requests Tab ───────────────────────────────────────────────────────
 
-function RequestsTab() {
+function RequestsTab({ hrMode, myEmployeeId }) {
   const queryClient = useQueryClient();
   const [employeeFilter, setEmployeeFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
@@ -124,7 +126,7 @@ function RequestsTab() {
           <button onClick={() => setViewLeave(row)} className="p-1.5 text-gray-400 hover:text-primary-600 hover:bg-primary-50 rounded" title="View">
             <Eye className="h-4 w-4" />
           </button>
-          {row.status === 'pending' && (
+          {hrMode && row.status === 'pending' && (
             <>
               <button onClick={() => approveMutation.mutate(val)} className="p-1.5 text-green-600 hover:bg-green-50 rounded" title="Approve">
                 <CheckCircle className="h-4 w-4" />
@@ -148,18 +150,20 @@ function RequestsTab() {
     <div className="space-y-4">
       <div className="flex flex-col sm:flex-row gap-3 justify-between">
         <div className="flex gap-3 flex-1">
-          <select
-            value={employeeFilter}
-            onChange={e => setEmployeeFilter(e.target.value)}
-            className="form-select flex-1 max-w-xs"
-          >
-            <option value="">All Employees</option>
-            {employees.map(e => (
-              <option key={e.id} value={e.id}>
-                {e.first_name} {e.last_name} ({e.emp_id})
-              </option>
-            ))}
-          </select>
+          {hrMode && (
+            <select
+              value={employeeFilter}
+              onChange={e => setEmployeeFilter(e.target.value)}
+              className="form-select flex-1 max-w-xs"
+            >
+              <option value="">All Employees</option>
+              {employees.map(e => (
+                <option key={e.id} value={e.id}>
+                  {e.first_name} {e.last_name} ({e.emp_id})
+                </option>
+              ))}
+            </select>
+          )}
           <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className="form-select w-36">
             <option value="">All Status</option>
             <option value="pending">Pending</option>
@@ -218,7 +222,7 @@ function RequestsTab() {
               {viewLeave.reason && <div className="col-span-2"><p className="text-gray-400">Reason</p><p className="font-medium">{viewLeave.reason}</p></div>}
               {viewLeave.rejection_reason && <div className="col-span-2"><p className="text-gray-400">Rejection Reason</p><p className="font-medium text-red-600">{viewLeave.rejection_reason}</p></div>}
             </div>
-            {viewLeave.status === 'pending' && (
+            {hrMode && viewLeave.status === 'pending' && (
               <div className="flex gap-2 pt-2">
                 <button onClick={() => approveMutation.mutate(viewLeave.id)} disabled={approveMutation.isPending} className="btn-primary flex-1 justify-center bg-green-600 hover:bg-green-700 focus:ring-green-500">
                   <CheckCircle className="h-4 w-4" /> Approve
@@ -269,12 +273,14 @@ function RequestsTab() {
         leaveTypes={leaveTypes}
         onSubmit={(data) => applyMutation.mutate(data)}
         isPending={applyMutation.isPending}
+        hrMode={hrMode}
+        myEmployeeId={myEmployeeId}
       />
     </div>
   );
 }
 
-function ApplyLeaveModal({ isOpen, onClose, employees, leaveTypes, onSubmit, isPending }) {
+function ApplyLeaveModal({ isOpen, onClose, employees, leaveTypes, onSubmit, isPending, hrMode, myEmployeeId }) {
   const [form, setForm] = useState({ employee_id: '', leave_type_id: '', from_date: '', to_date: '', days: '', reason: '' });
 
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
@@ -293,19 +299,22 @@ function ApplyLeaveModal({ isOpen, onClose, employees, leaveTypes, onSubmit, isP
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onSubmit({ ...form, employee_id: parseInt(form.employee_id), leave_type_id: parseInt(form.leave_type_id), days: parseFloat(form.days) });
+    const empId = hrMode ? parseInt(form.employee_id) : myEmployeeId;
+    onSubmit({ ...form, employee_id: empId, leave_type_id: parseInt(form.leave_type_id), days: parseFloat(form.days) });
   };
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Apply Leave" size="md">
       <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label className="form-label">Employee *</label>
-          <select className="form-select" value={form.employee_id} onChange={e => set('employee_id', e.target.value)} required>
-            <option value="">Select employee</option>
-            {employees.map(e => <option key={e.id} value={e.id}>{e.first_name} {e.last_name} ({e.emp_id})</option>)}
-          </select>
-        </div>
+        {hrMode && (
+          <div>
+            <label className="form-label">Employee *</label>
+            <select className="form-select" value={form.employee_id} onChange={e => set('employee_id', e.target.value)} required>
+              <option value="">Select employee</option>
+              {employees.map(e => <option key={e.id} value={e.id}>{e.first_name} {e.last_name} ({e.emp_id})</option>)}
+            </select>
+          </div>
+        )}
         <div>
           <label className="form-label">Leave Type *</label>
           <select className="form-select" value={form.leave_type_id} onChange={e => set('leave_type_id', e.target.value)} required>
@@ -701,15 +710,20 @@ function LeaveTypeModal({ isOpen, initialData, onClose, onSubmit, isPending }) {
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
 export default function LeaveManagement() {
+  const hrMode = isHR();
+  const myEmployeeId = getEmployeeId();
   const [activeTab, setActiveTab] = useState(0);
 
+  const TABS = hrMode ? HR_TABS : EMPLOYEE_TABS;
   const icons = [CalendarDays, Users, Settings2];
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Leave Management</h1>
-        <p className="text-sm text-gray-500 mt-1">Manage leave requests, allocations and leave types</p>
+        <h1 className="text-2xl font-bold text-gray-900">{hrMode ? 'Leave Management' : 'My Leaves'}</h1>
+        <p className="text-sm text-gray-500 mt-1">
+          {hrMode ? 'Manage leave requests, allocations and leave types' : 'View and apply for leaves'}
+        </p>
       </div>
 
       {/* Tabs */}
@@ -735,9 +749,9 @@ export default function LeaveManagement() {
         </nav>
       </div>
 
-      {activeTab === 0 && <RequestsTab />}
-      {activeTab === 1 && <AllocationsTab />}
-      {activeTab === 2 && <LeaveTypesTab />}
+      {activeTab === 0 && <RequestsTab hrMode={hrMode} myEmployeeId={myEmployeeId} />}
+      {hrMode && activeTab === 1 && <AllocationsTab />}
+      {hrMode && activeTab === 2 && <LeaveTypesTab />}
     </div>
   );
 }

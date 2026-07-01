@@ -22,6 +22,7 @@ import ESICReport from './pages/reports/ESICReport';
 import CompanySettings from './pages/settings/CompanySettings';
 import OfferLetters from './pages/OfferLetters';
 import Resignations from './pages/Resignations';
+import AccountRequests from './pages/AccountRequests';
 
 function RequireAuth({ children }) {
   return isAuthenticated() ? children : <Navigate to="/login" replace />;
@@ -91,6 +92,7 @@ export default function App() {
         {/* Documents */}
         <Route path="/offer-letters" element={<OfferLetters />} />
         <Route path="/resignations" element={<Resignations />} />
+        <Route path="/account-requests" element={<AccountRequests />} />
 
         {/* Settings */}
         <Route path="/settings" element={<CompanySettings />} />

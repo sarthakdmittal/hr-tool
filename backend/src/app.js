@@ -52,6 +52,7 @@ app.use('/api/payroll',          require('./routes/payroll'));
 app.use('/api/reports',          require('./routes/reports'));
 app.use('/api/offer-letters',    require('./routes/offerLetters'));
 app.use('/api/resignations',     require('./routes/resignations'));
+app.use('/api/account-requests', require('./routes/accountRequests'));
 app.use('/api/tax-declarations', require('./routes/taxDeclarations'));
 
 app.get('/api/health', (req, res) => res.json({ status: 'ok', ts: Date.now() }));
@@ -118,6 +119,7 @@ async function runMigrations() {
     // Add 'cancelled' to the status ENUM if it was created before that value existed
     `ALTER TYPE "enum_leaves_status" ADD VALUE IF NOT EXISTS 'cancelled'`,
     `ALTER TABLE offer_letters ADD COLUMN IF NOT EXISTS location VARCHAR(255)`,
+    `ALTER TABLE users ADD COLUMN IF NOT EXISTS employee_id INTEGER`,
     // Create resignation_letters table if not exists
     `CREATE TABLE IF NOT EXISTS resignation_letters (
       id SERIAL PRIMARY KEY,
@@ -130,6 +132,19 @@ async function runMigrations() {
       status VARCHAR(20) DEFAULT 'submitted',
       hr_notes TEXT,
       generated_by INTEGER,
+      created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+      updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+    )`,
+    // Account requests: employees self-submit for HR approval
+    `CREATE TABLE IF NOT EXISTS account_requests (
+      id SERIAL PRIMARY KEY,
+      company_id INTEGER NOT NULL,
+      employee_id INTEGER,
+      name VARCHAR(255) NOT NULL,
+      email VARCHAR(255) NOT NULL,
+      password_hash VARCHAR(255) NOT NULL,
+      status VARCHAR(20) NOT NULL DEFAULT 'pending',
+      hr_notes TEXT,
       created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
       updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
     )`,
