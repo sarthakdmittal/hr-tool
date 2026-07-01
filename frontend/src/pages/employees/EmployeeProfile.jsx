@@ -473,7 +473,7 @@ export default function EmployeeProfile() {
                   <table className="w-full">
                     <thead>
                       <tr className="border-b border-gray-200">
-                        {['Leave Type', 'Total', 'Used', 'Available'].map((h) => (
+                        {['Leave Type', 'Allocated', 'Used', 'Balance'].map((h) => (
                           <th
                             key={h}
                             className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide"
@@ -485,19 +485,16 @@ export default function EmployeeProfile() {
                     </thead>
                     <tbody className="divide-y divide-gray-100">
                       {leaveBalances.map((lb, idx) => (
-                        <tr key={lb.id || idx} className="hover:bg-gray-50 transition-colors">
+                        <tr key={lb.leave_type_id || idx} className="hover:bg-gray-50 transition-colors">
                           <td className="px-4 py-3.5 text-sm font-medium text-gray-900">
-                            {lb.leave_type || lb.type || '—'}
+                            <span>{lb.name || '—'}</span>
+                            {lb.code && <span className="ml-1.5 text-xs font-mono bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded">{lb.code}</span>}
                           </td>
-                          <td className="px-4 py-3.5 text-sm text-gray-700">{lb.total ?? '—'}</td>
+                          <td className="px-4 py-3.5 text-sm text-gray-700">{lb.allocated ?? '—'}</td>
                           <td className="px-4 py-3.5 text-sm text-gray-700">{lb.used ?? '—'}</td>
                           <td className="px-4 py-3.5">
-                            <span
-                              className={`text-sm font-semibold ${
-                                (lb.available ?? 0) > 0 ? 'text-green-600' : 'text-red-500'
-                              }`}
-                            >
-                              {lb.available ?? (lb.total != null && lb.used != null ? lb.total - lb.used : '—')}
+                            <span className={`text-sm font-semibold ${(lb.balance ?? 0) > 0 ? 'text-green-600' : 'text-red-500'}`}>
+                              {lb.balance ?? '—'}
                             </span>
                           </td>
                         </tr>
