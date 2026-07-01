@@ -1,4 +1,4 @@
-const { Attendance, Employee, Department, Designation } = require('../models');
+const { Attendance, Employee, Department, Designation, Leave } = require('../models');
 const { Op } = require('sequelize');
 
 exports.markAttendance = async (req, res) => {
@@ -13,6 +13,19 @@ exports.markAttendance = async (req, res) => {
     // Verify employee belongs to company
     const employee = await Employee.findOne({ where: { id: employee_id, company_id } });
     if (!employee) return res.status(404).json({ error: 'Employee not found' });
+
+    // Block if approved leave exists for this date
+    const approvedLeave = await Leave.findOne({
+      where: {
+        employee_id,
+        status: 'approved',
+        from_date: { [Op.lte]: date },
+        to_date: { [Op.gte]: date },
+      },
+    });
+    if (approvedLeave) {
+      return res.status(400).json({ error: 'Employee has an approved leave on this date. Cancel the leave first.' });
+    }
 
     // Upsert attendance record
     const [attendance, created] = await Attendance.findOrCreate({

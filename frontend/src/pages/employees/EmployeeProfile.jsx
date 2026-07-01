@@ -96,7 +96,7 @@ export default function EmployeeProfile() {
   // Salary slips
   const { data: salarySlips, isLoading: slipsLoading } = useQuery({
     queryKey: ['employee-salary-slips', id],
-    queryFn: () => api.get(`/employees/${id}/salary-slips`).then((r) => r.data),
+    queryFn: () => api.get(`/employees/${id}/payslips`).then((r) => r.data),
     enabled: activeTab === 'salary-slips' && Boolean(id),
     staleTime: 60_000,
   });
@@ -106,10 +106,10 @@ export default function EmployeeProfile() {
     queryKey: ['employee-attendance', id, attendanceMonth, attendanceYear],
     queryFn: () =>
       api
-        .get(`/employees/${id}/attendance`, {
+        .get(`/attendance/employee/${id}/summary`, {
           params: { month: attendanceMonth, year: attendanceYear },
         })
-        .then((r) => r.data),
+        .then((r) => r.data.summary),
     enabled: activeTab === 'attendance' && Boolean(id),
     staleTime: 30_000,
   });
@@ -445,16 +445,14 @@ export default function EmployeeProfile() {
               {attLoading ? (
                 <LoadingSpinner className="py-16" />
               ) : !attendance ? (
-                <div className="text-center py-16 text-sm text-gray-400">
-                  No attendance data for this period.
-                </div>
+                <div className="text-center py-16 text-sm text-gray-400">No attendance data for this period.</div>
               ) : (
                 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
-                  <SummaryCard label="Present" value={attendance.present} color="green" />
-                  <SummaryCard label="Absent" value={attendance.absent} color="red" />
-                  <SummaryCard label="Half Day" value={attendance.half_day} color="yellow" />
-                  <SummaryCard label="LOP Days" value={attendance.lop} color="purple" />
-                  <SummaryCard label="Working Days" value={attendance.working_days} color="blue" />
+                  <SummaryCard label="Present" value={attendance.present ?? 0} color="green" />
+                  <SummaryCard label="Absent" value={attendance.absent ?? 0} color="red" />
+                  <SummaryCard label="Half Day" value={attendance.half_day ?? 0} color="yellow" />
+                  <SummaryCard label="WFH" value={attendance.wfh ?? 0} color="blue" />
+                  <SummaryCard label="LOP" value={attendance.lop ?? 0} color="purple" />
                 </div>
               )}
             </div>

@@ -4,8 +4,10 @@ const { generateResignationLetter } = require('../services/pdfService');
 exports.listResignations = async (req, res) => {
   try {
     const company_id = req.user.company_id;
+    const where = { company_id };
+    if (req.user.role === 'employee') where.employee_id = req.user.employee_id;
     const resignations = await ResignationLetter.findAll({
-      where: { company_id },
+      where,
       include: [{
         model: Employee,
         attributes: ['id', 'emp_id', 'first_name', 'last_name'],
@@ -25,7 +27,9 @@ exports.listResignations = async (req, res) => {
 exports.createResignation = async (req, res) => {
   try {
     const company_id = req.user.company_id;
-    const { employee_id, resignation_date, last_working_date, reason, notice_period_waived } = req.body;
+    const { resignation_date, last_working_date, reason, notice_period_waived } = req.body;
+    // Employees can only submit their own resignation
+    const employee_id = req.user.role === 'employee' ? req.user.employee_id : req.body.employee_id;
 
     if (!employee_id || !resignation_date || !last_working_date) {
       return res.status(400).json({ error: 'employee_id, resignation_date, and last_working_date are required' });

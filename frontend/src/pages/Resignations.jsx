@@ -8,12 +8,14 @@ import Table from '../components/Table';
 import Modal from '../components/Modal';
 import Badge from '../components/Badge';
 import { formatDate } from '../utils/formatters';
+import { isHR } from '../store/authStore';
 
 const STATUS_OPTIONS = ['submitted', 'accepted', 'rejected', 'withdrawn'];
 const STATUS_COLORS = { submitted: 'blue', accepted: 'green', rejected: 'red', withdrawn: 'gray' };
 
 export default function Resignations() {
   const queryClient = useQueryClient();
+  const hrMode = isHR();
   const [createOpen, setCreateOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [downloadingId, setDownloadingId] = useState(null);
@@ -106,7 +108,7 @@ export default function Resignations() {
     {
       header: 'Status',
       accessor: 'status',
-      render: (val, row) => (
+      render: (val, row) => hrMode ? (
         <select
           value={val}
           className="text-xs border border-gray-200 rounded-lg px-2 py-1 bg-white focus:outline-none focus:ring-2 focus:ring-primary-500"
@@ -117,6 +119,10 @@ export default function Resignations() {
             <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>
           ))}
         </select>
+      ) : (
+        <span className="text-xs px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-100">
+          {val.charAt(0).toUpperCase() + val.slice(1)}
+        </span>
       ),
     },
     {
@@ -136,12 +142,14 @@ export default function Resignations() {
             )}
             PDF
           </button>
-          <button
-            className="btn-danger py-1 px-2 text-xs"
-            onClick={(e) => { e.stopPropagation(); setDeleteTarget(row); }}
-          >
-            <Trash2 className="h-3.5 w-3.5" />
-          </button>
+          {hrMode && (
+            <button
+              className="btn-danger py-1 px-2 text-xs"
+              onClick={(e) => { e.stopPropagation(); setDeleteTarget(row); }}
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+            </button>
+          )}
         </div>
       ),
     },
@@ -151,11 +159,13 @@ export default function Resignations() {
     <div className="space-y-5">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Resignations</h1>
-          <p className="text-sm text-gray-500 mt-0.5">Manage employee resignation letters</p>
+          <h1 className="text-2xl font-bold text-gray-900">{hrMode ? 'Resignations' : 'My Resignation'}</h1>
+          <p className="text-sm text-gray-500 mt-0.5">
+            {hrMode ? 'Manage employee resignation letters' : 'Submit and track your resignation'}
+          </p>
         </div>
         <button className="btn-primary" onClick={() => setCreateOpen(true)}>
-          <Plus className="h-4 w-4" /> New Resignation
+          <Plus className="h-4 w-4" /> {hrMode ? 'New Resignation' : 'Submit Resignation'}
         </button>
       </div>
 
@@ -200,18 +210,20 @@ export default function Resignations() {
         }
       >
         <form className="grid grid-cols-2 gap-4">
-          <div className="col-span-2">
-            <label className="form-label">Employee *</label>
-            <select {...register('employee_id', { required: true })} className="form-select">
-              <option value="">-- Select Employee --</option>
-              {employees.map(emp => (
-                <option key={emp.id} value={emp.id}>
-                  {emp.first_name} {emp.last_name} ({emp.emp_id})
-                </option>
-              ))}
-            </select>
-            {errors.employee_id && <p className="text-xs text-red-500 mt-1">Required</p>}
-          </div>
+          {hrMode && (
+            <div className="col-span-2">
+              <label className="form-label">Employee *</label>
+              <select {...register('employee_id', { required: hrMode })} className="form-select">
+                <option value="">-- Select Employee --</option>
+                {employees.map(emp => (
+                  <option key={emp.id} value={emp.id}>
+                    {emp.first_name} {emp.last_name} ({emp.emp_id})
+                  </option>
+                ))}
+              </select>
+              {errors.employee_id && <p className="text-xs text-red-500 mt-1">Required</p>}
+            </div>
+          )}
           <div>
             <label className="form-label">Resignation Date *</label>
             <input type="date" {...register('resignation_date', { required: true })} className="form-input" />

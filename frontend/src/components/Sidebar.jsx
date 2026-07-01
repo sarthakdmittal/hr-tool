@@ -15,6 +15,7 @@ import {
   UserMinus,
   User,
   UserCheck,
+  LogOut,
 } from 'lucide-react';
 import { isHR, getEmployeeId } from '../store/authStore';
 
@@ -28,6 +29,7 @@ const getNavSections = () => {
           { path: empId ? `/employees/${empId}` : '/', label: 'My Profile', icon: User, end: true },
           { path: '/attendance', label: 'Attendance', icon: CalendarCheck },
           { path: '/leaves', label: 'My Leaves', icon: CalendarDays },
+          { path: '/resignations', label: 'Resignation', icon: LogOut },
         ],
       },
     ];
