@@ -426,6 +426,14 @@ async function generateOfferLetter(offerData, employee, company) {
     );
     doc.moveDown(1);
 
+    // ============ ADDITIONAL TERMS ============
+    if (offerData.additional_terms) {
+      doc.fontSize(10).font('Helvetica-Bold').text('Additional Terms & Conditions:', leftMargin, doc.y);
+      doc.moveDown(0.3);
+      doc.font('Helvetica').text(offerData.additional_terms, leftMargin, doc.y, { width: pageWidth, align: 'justify' });
+      doc.moveDown(1);
+    }
+
     // ============ SIGNATURE BLOCK ============
     doc.fontSize(10).font('Helvetica').text('Yours sincerely,', leftMargin, doc.y);
     doc.moveDown(2.5);
