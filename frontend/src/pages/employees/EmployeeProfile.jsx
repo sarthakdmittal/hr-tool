@@ -446,12 +446,15 @@ export default function EmployeeProfile() {
               ) : !attendance ? (
                 <div className="text-center py-16 text-sm text-gray-400">No attendance data for this period.</div>
               ) : (
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
                   <SummaryCard label="Present" value={attendance.present ?? 0} color="green" />
                   <SummaryCard label="Absent" value={attendance.absent ?? 0} color="red" />
                   <SummaryCard label="Half Day" value={attendance.half_day ?? 0} color="yellow" />
-                  <SummaryCard label="WFH" value={attendance.wfh ?? 0} color="blue" />
+                  <SummaryCard label="Week Off" value={attendance.week_off ?? 0} color="blue" />
+                  <SummaryCard label="Holiday" value={attendance.holiday ?? 0} color="blue" />
+                  <SummaryCard label="Leave" value={attendance.leave ?? 0} color="blue" />
                   <SummaryCard label="LOP" value={attendance.lop ?? 0} color="purple" />
+                  <SummaryCard label="Overtime" value={attendance.overtime ?? 0} color="green" />
                 </div>
               )}
             </div>

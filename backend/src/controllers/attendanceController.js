@@ -243,17 +243,24 @@ exports.getEmployeeAttendanceSummary = async (req, res) => {
     });
 
     const summary = {
-      present: 0, absent: 0, half_day: 0, wfh: 0,
-      holiday: 0, leave: 0, lop: 0, week_off: 0
+      present: 0, absent: 0, half_day: 0, week_off: 0,
+      holiday: 0, leave: 0, lop: 0, overtime: 0,
     };
 
+    // Status is stored as short codes, possibly comma-separated (e.g. "P,OT")
     for (const record of records) {
-      if (summary.hasOwnProperty(record.status)) {
-        summary[record.status]++;
-      }
+      const codes = record.status ? record.status.split(',').map(s => s.trim()) : [];
+      if (codes.includes('P'))     summary.present++;
+      if (codes.includes('A'))     summary.absent++;
+      if (codes.includes('P/2'))   summary.half_day++;
+      if (codes.includes('W'))     summary.week_off++;
+      if (codes.includes('H'))     summary.holiday++;
+      if (codes.includes('L'))     summary.leave++;
+      if (codes.includes('LOP'))   summary.lop++;
+      if (codes.includes('OT') || codes.includes('OT/2')) summary.overtime++;
     }
 
-    const paidDays = summary.present + summary.wfh + (summary.half_day * 0.5) + summary.holiday + summary.leave;
+    const paidDays = summary.present + (summary.half_day * 0.5) + summary.week_off + summary.holiday + summary.leave + summary.overtime;
     const lopDays = summary.lop + summary.absent;
 
     res.json({
